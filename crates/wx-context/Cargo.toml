@@ -11,7 +11,7 @@ wx-paths = { path = "../wx-paths" }
 serde = { version = "1", features = ["derive"] }
 thiserror = "2"
 hex = "0.4"
-rusqlite = { version = "0.32", features = ["bundled-sqlcipher"] }
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher"] }
 dashmap = "6"
 rayon = "1"
 rust-stemmers = "1"

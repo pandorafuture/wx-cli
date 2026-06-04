@@ -11,7 +11,7 @@ audio = ["dep:silk-rs"]
 aes = "0.8"
 ecb = "0.1"
 cipher = { version = "0.4", features = ["block-padding"] }
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.40", features = ["bundled"] }
 md5 = "0.7"
 base64 = "0.22"
 thiserror = "2"

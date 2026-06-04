@@ -20,5 +20,5 @@ cbc      = "0.1"
 hmac     = "0.12"
 sha2     = "0.10"
 pbkdf2   = { version = "0.12", features = ["sha2"] }
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.40", features = ["bundled"] }
 tokio    = { version = "1", features = ["rt-multi-thread", "macros", "time"] }

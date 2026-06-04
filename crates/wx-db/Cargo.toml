@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-rusqlite = { version = "0.32", features = ["bundled-sqlcipher"] }
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher"] }
 prost = "0.13"
 zstd = "0.13"
 md5 = "0.7"
