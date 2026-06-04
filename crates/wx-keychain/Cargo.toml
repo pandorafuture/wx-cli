@@ -9,7 +9,7 @@ wx-paths = { path = "../wx-paths" }
 tokio = { version = "1", features = ["process", "time", "io-util", "rt-multi-thread", "macros"] }
 regex = "1"
 serde = { version = "1", features = ["derive"] }
-toml = "0.8"
+toml = "1.1"
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
 hex = "0.4"
