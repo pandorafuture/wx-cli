@@ -8,7 +8,7 @@ default = []
 audio = ["dep:silk-rs"]
 
 [dependencies]
-aes = "0.8"
+aes = "0.9"
 ecb = "0.1"
 cipher = { version = "0.4", features = ["block-padding"] }
 rusqlite = { version = "0.32", features = ["bundled"] }
