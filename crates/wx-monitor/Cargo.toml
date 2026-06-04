@@ -16,7 +16,7 @@ serde          = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 aes      = "0.8"
-cbc      = "0.1"
+cbc      = "0.2"
 hmac     = "0.12"
 sha2     = "0.10"
 pbkdf2   = { version = "0.12", features = ["sha2"] }

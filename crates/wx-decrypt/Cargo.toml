@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 aes = "0.8"
-cbc = "0.1"
+cbc = "0.2"
 pbkdf2 = { version = "0.12", features = ["sha2"] }
 sha2 = "0.10"
 hmac = "0.12"
