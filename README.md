@@ -25,6 +25,24 @@ WeChat macOS 数据库解密与查询工具。支持通过 `key scan`（Mach VM 
 
 ## 安装
 
+### 从 Release 下载（推荐）
+
+前往 [Releases](https://github.com/pandorafuture/wx-cli/releases/latest) 下载预编译二进制（macOS arm64），或使用命令行：
+
+```bash
+# 下载最新 release
+curl -fSL "$(curl -fsSL https://api.github.com/repos/pandorafuture/wx-cli/releases/latest \
+  | grep -o '"browser_download_url": "[^"]*macos-arm64[^"]*"' \
+  | cut -d'"' -f4)" -o wx-cli.tar.gz
+tar xzf wx-cli.tar.gz
+
+# 安装到 PATH
+mkdir -p ~/.local/bin
+mv wx-cli ~/.local/bin/
+chmod +x ~/.local/bin/wx-cli
+wx-cli --version
+```
+
 ### 从源码构建
 
 ```bash
