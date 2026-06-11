@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 rusqlite = { version = "0.40", features = ["bundled-sqlcipher"] }
-prost = "0.13"
+prost = "0.14"
 zstd = "0.13"
 md5 = "0.7"
 thiserror = "2"
