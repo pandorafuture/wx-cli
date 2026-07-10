@@ -414,7 +414,8 @@ impl WechatDb {
         )?;
 
         for shard in &self.shards {
-            let shard_conn = WechatDb::open_shard_with_key(shard, self.raw_key.as_ref())?;
+            let shard_conn =
+                WechatDb::open_shard_with_key(shard, self.sqlcipher_key.as_ref())?;
 
             // List Msg_* tables in this shard
             let mut table_stmt = shard_conn.prepare(

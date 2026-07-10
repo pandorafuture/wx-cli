@@ -1,8 +1,6 @@
 use std::path::PathBuf;
 
-use wx_context::{
-    open_fts_connection_with_key, AccountContext, ContactResolver, ResolveParams,
-};
+use wx_context::{register_mm_fts_tokenizer, AccountContext, ContactResolver, ResolveParams};
 
 use super::thin_client::{ThinClient, ThinClientCliArgs, ThinClientOptions};
 use crate::output::{JsonEnvelope, PagingMeta, StatsMeta};
@@ -64,7 +62,10 @@ fn load_local_search(
 
     // --- Native FTS search → fallback to scan ---
     let use_fallback = match db.message_fts_path.as_deref() {
-        Some(fts_path) => match open_fts_connection_with_key(fts_path, acct.raw_key.as_ref()) {
+        Some(fts_path) => match db.open_related_readonly(fts_path).and_then(|conn| {
+            register_mm_fts_tokenizer(&conn).map_err(wx_db::DbError::FtsInit)?;
+            Ok(conn)
+        }) {
             Ok(conn) => {
                 match wx_db::native_fts::search_message_fts(
                     &conn,

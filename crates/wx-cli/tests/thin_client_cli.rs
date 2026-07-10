@@ -4,6 +4,8 @@ use std::process::Command;
 use std::thread;
 use std::time::{Duration, Instant};
 
+use tempfile::TempDir;
+
 fn bin() -> &'static str {
     env!("CARGO_BIN_EXE_wx-cli")
 }
@@ -278,7 +280,8 @@ fn server_only_fails_when_remote_unavailable() {
 
 #[test]
 fn unavailable_remote_falls_back_to_local() {
-    let output = Command::new(bin())
+    let (mut command, _home) = command_without_local_account();
+    let output = command
         .args(["sessions", "--server-url", "http://127.0.0.1:9"])
         .output()
         .expect("run sessions fallback");
@@ -314,7 +317,8 @@ fn no_server_bypasses_remote_probe() {
         }
     });
 
-    let output = Command::new(bin())
+    let (mut command, _home) = command_without_local_account();
+    let output = command
         .args([
             "sessions",
             "--no-server",
@@ -331,6 +335,39 @@ fn no_server_bypasses_remote_probe() {
         !handle.join().unwrap(),
         "no-server should not contact the mock server"
     );
+}
+
+#[test]
+fn healthy_server_business_transport_failure_does_not_fall_back() {
+    let (base_url, handle) = spawn_sequence_server(2, |_request, index| match index {
+        0 => http_response("200 OK", "{\"ready\":true}"),
+        // Close the second connection without a response. This is classified as an
+        // unavailable transport error, but health already proved the server was selected.
+        1 => String::new(),
+        _ => unreachable!(),
+    });
+
+    let output = Command::new(bin())
+        .args(["sessions", "--server-url", &base_url])
+        .output()
+        .expect("run sessions with failed business request");
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("error:"));
+    assert!(!stderr.contains("falling back to local"));
+    handle.join().unwrap();
+}
+
+fn command_without_local_account() -> (Command, TempDir) {
+    let home = TempDir::new().expect("create isolated home");
+    let mut command = Command::new(bin());
+    command
+        .env("HOME", home.path())
+        .env_remove("WECHAT_CLI_DATA_DIR")
+        .env_remove("WECHAT_CLI_ACCOUNT")
+        .env_remove("WECHAT_CLI_KEY");
+    (command, home)
 }
 
 fn spawn_sequence_server(

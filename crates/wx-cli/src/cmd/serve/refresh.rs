@@ -6,7 +6,7 @@ use rusqlite::Connection;
 use tokio::sync::{mpsc, watch};
 use tokio_util::sync::CancellationToken;
 use wx_context::{
-    open_fts_connection, open_fts_connection_with_key, DecryptProgress, DecryptRequest,
+    open_fts_connection, register_mm_fts_tokenizer, DecryptProgress, DecryptRequest,
     PersistentCache,
 };
 use wx_db::WechatDb;
@@ -35,8 +35,6 @@ pub struct RefreshTask {
     fts_conn: Option<Arc<std::sync::Mutex<Connection>>>,
     /// Path to FTS DB for reopening.
     fts_path: Option<PathBuf>,
-    /// Raw key for encrypted FTS reopen.
-    raw_key: Option<[u8; 32]>,
     /// Cache of name2id mapping — cleared when FTS is reopened.
     name2id_cache: Option<Arc<std::sync::Mutex<Option<HashMap<i64, String>>>>>,
     /// Cache of media DB paths — cleared on every refresh.
@@ -61,16 +59,10 @@ impl RefreshTask {
             shutdown,
             fts_conn: None,
             fts_path: None,
-            raw_key: None,
             name2id_cache: None,
             media_db_paths: None,
             hardlink_db_conn: None,
         }
-    }
-
-    pub fn with_raw_key(mut self, raw_key: Option<[u8; 32]>) -> Self {
-        self.raw_key = raw_key;
-        self
     }
 
     /// Set the independent FTS connection and path for refresh reopening.
@@ -128,7 +120,6 @@ impl RefreshTask {
             let cache = self.cache.clone();
             let fts_conn = self.fts_conn.clone();
             let fts_path = self.fts_path.clone();
-            let raw_key = self.raw_key;
             let success = tokio::task::spawn_blocking(move || {
                 if let Some(cache) = cache {
                     // Decrypt-cache mode: decrypt then selective reopen
@@ -264,7 +255,10 @@ impl RefreshTask {
 
                     // Reopen independent FTS connection
                     if let (Some(fts_mutex), Some(path)) = (&fts_conn, &fts_path) {
-                        match open_fts_connection_with_key(path, raw_key.as_ref()) {
+                        match guard.open_related_readonly(path).and_then(|conn| {
+                            register_mm_fts_tokenizer(&conn).map_err(wx_db::DbError::FtsInit)?;
+                            Ok(conn)
+                        }) {
                             Ok(new_conn) => {
                                 if let Ok(mut fts_guard) = fts_mutex.lock()
                                     as Result<std::sync::MutexGuard<'_, Connection>, _>
