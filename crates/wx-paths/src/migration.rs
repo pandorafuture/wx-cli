@@ -120,8 +120,14 @@ mod tests {
         }
 
         // New files exist
-        assert_eq!(fs::read_to_string(new_config.join("keys.toml")).unwrap(), "test-keys");
-        assert_eq!(fs::read_to_string(new_config.join("settings.toml")).unwrap(), "test-settings");
+        assert_eq!(
+            fs::read_to_string(new_config.join("keys.toml")).unwrap(),
+            "test-keys"
+        );
+        assert_eq!(
+            fs::read_to_string(new_config.join("settings.toml")).unwrap(),
+            "test-settings"
+        );
 
         // Old files deleted
         assert!(!old_config.join("keys.toml").exists());
@@ -153,7 +159,10 @@ mod tests {
         }
 
         // New file unchanged
-        assert_eq!(fs::read_to_string(new_config.join("keys.toml")).unwrap(), "new-keys");
+        assert_eq!(
+            fs::read_to_string(new_config.join("keys.toml")).unwrap(),
+            "new-keys"
+        );
         // Old file still exists (wasn't migrated because dst exists)
         assert!(old_config.join("keys.toml").exists());
     }

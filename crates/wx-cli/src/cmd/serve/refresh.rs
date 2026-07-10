@@ -11,6 +11,8 @@ use wx_context::{
 };
 use wx_db::WechatDb;
 
+type Name2IdCache = Arc<std::sync::Mutex<Option<HashMap<i64, String>>>>;
+
 /// Signal sent to the refresh task.
 pub enum RefreshTrigger {
     Refresh,
@@ -36,7 +38,7 @@ pub struct RefreshTask {
     /// Path to FTS DB for reopening.
     fts_path: Option<PathBuf>,
     /// Cache of name2id mapping — cleared when FTS is reopened.
-    name2id_cache: Option<Arc<std::sync::Mutex<Option<HashMap<i64, String>>>>>,
+    name2id_cache: Option<Name2IdCache>,
     /// Cache of media DB paths — cleared on every refresh.
     media_db_paths: Option<Arc<std::sync::Mutex<Option<Vec<PathBuf>>>>>,
     /// Cached hardlink.db connection — cleared on refresh so it is reopened lazily.
@@ -79,7 +81,7 @@ impl RefreshTask {
     /// Set the caches that should be invalidated on refresh.
     pub fn with_caches(
         mut self,
-        name2id_cache: Option<Arc<std::sync::Mutex<Option<HashMap<i64, String>>>>>,
+        name2id_cache: Option<Name2IdCache>,
         media_db_paths: Option<Arc<std::sync::Mutex<Option<Vec<PathBuf>>>>>,
         hardlink_db_conn: Option<Arc<std::sync::Mutex<Option<Connection>>>>,
     ) -> Self {

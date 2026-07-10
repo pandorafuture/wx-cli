@@ -85,7 +85,9 @@ pub use audio_transcode::{transcode_silk_to_mp3, transcode_silk_to_ogg_opus};
 pub use dat::{decrypt_dat, detect_dat_format, detect_image_type, detect_xor_key};
 pub use error::MediaError;
 pub use fallback::{find_file_by_name, find_video_by_md5};
-pub use ffmpeg::{ffmpeg_available, ffprobe_available, reset_ffmpeg_cache, run_ffmpeg, run_ffprobe};
+pub use ffmpeg::{
+    ffmpeg_available, ffprobe_available, reset_ffmpeg_cache, run_ffmpeg, run_ffprobe,
+};
 pub use hardlink::{query_hardlink, query_hardlink_with_conn};
 pub use image_resolver::{resolve_image, resolve_image_by_md5};
 pub use image_transcode::transcode_wxgf;
@@ -97,7 +99,9 @@ pub use types::{
     MediaLookupResult, TranscodeAudioResult, TranscodeImageResult, VoiceBlob,
 };
 pub use video_decrypt::{decrypt_video, decrypt_video_with_keystream};
-pub use voice::{extract_voice, extract_voice_with_conn, extract_voice_with_conn_hint, find_media_dbs};
+pub use voice::{
+    extract_voice, extract_voice_with_conn, extract_voice_with_conn_hint, find_media_dbs,
+};
 pub use wxgf::{parse_wxgf, WxgfContent};
 
 /// Compute MD5 hash of bytes, returning the `md5::Digest` (displays as hex).

@@ -6,7 +6,9 @@ use super::contacts::build_visibility;
 use super::thin_client::{ThinClientCliArgs, ThinClientOptions};
 use crate::output::JsonEnvelope;
 use crate::schema::{enrich_session, EnrichedSession};
-use crate::util::{effective_limit_all, open_db_core, print_cache_stats, print_detection_note, try_remote_or_local};
+use crate::util::{
+    effective_limit_all, open_db_core, print_cache_stats, print_detection_note, try_remote_or_local,
+};
 use crate::visibility_projection::project_sessions_envelope_enriched;
 use crate::{OutputFormat, SortOrderArg};
 

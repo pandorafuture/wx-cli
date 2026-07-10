@@ -26,9 +26,7 @@ impl PlatformBaseDirs {
             let config_root = dirs::config_dir()
                 .ok_or(PathsError::NoConfig)?
                 .join("wx-cli");
-            let cache_root = dirs::cache_dir()
-                .ok_or(PathsError::NoCache)?
-                .join("wx-cli");
+            let cache_root = dirs::cache_dir().ok_or(PathsError::NoCache)?.join("wx-cli");
             let state_root = dirs::state_dir()
                 .or_else(dirs::data_local_dir)
                 .or_else(dirs::data_dir)
@@ -48,9 +46,7 @@ impl PlatformBaseDirs {
             let config_root = dirs::config_dir()
                 .ok_or(PathsError::NoConfig)?
                 .join("wx-cli");
-            let cache_root = dirs::cache_dir()
-                .ok_or(PathsError::NoCache)?
-                .join("wx-cli");
+            let cache_root = dirs::cache_dir().ok_or(PathsError::NoCache)?.join("wx-cli");
             let local_data = dirs::data_local_dir()
                 .or_else(dirs::data_dir)
                 .ok_or(PathsError::NoState)?
@@ -71,9 +67,7 @@ impl PlatformBaseDirs {
             let config_root = dirs::config_dir()
                 .ok_or(PathsError::NoConfig)?
                 .join("wx-cli");
-            let cache_root = dirs::cache_dir()
-                .ok_or(PathsError::NoCache)?
-                .join("wx-cli");
+            let cache_root = dirs::cache_dir().ok_or(PathsError::NoCache)?.join("wx-cli");
             let state_root = dirs::state_dir()
                 .or_else(dirs::data_local_dir)
                 .or_else(dirs::data_dir)

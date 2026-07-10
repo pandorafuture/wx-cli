@@ -39,7 +39,13 @@ fn print_paths_table(summary: &PathsSummary) {
         } else {
             "[missing]"
         };
-        println!("{:<width$}  {:<60}  {}", label, display, status, width = max_label);
+        println!(
+            "{:<width$}  {:<60}  {}",
+            label,
+            display,
+            status,
+            width = max_label
+        );
     }
 }
 

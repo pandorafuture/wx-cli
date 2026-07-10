@@ -211,7 +211,9 @@ impl AppPaths {
 
     /// `<temp_root>/lldb/wechat_lldb_output.txt`
     pub fn lldb_output_file() -> PathBuf {
-        Self::temp_root().join("lldb").join("wechat_lldb_output.txt")
+        Self::temp_root()
+            .join("lldb")
+            .join("wechat_lldb_output.txt")
     }
 
     /// `<temp_root>/nickname/<pid>_<nanos>.db`
@@ -242,13 +244,21 @@ impl AppPaths {
     /// Current platform identifier.
     pub fn platform() -> &'static str {
         #[cfg(target_os = "macos")]
-        { "macos" }
+        {
+            "macos"
+        }
         #[cfg(target_os = "linux")]
-        { "linux" }
+        {
+            "linux"
+        }
         #[cfg(target_os = "windows")]
-        { "windows" }
+        {
+            "windows"
+        }
         #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
-        { "unknown" }
+        {
+            "unknown"
+        }
     }
 
     /// Build a summary of all paths.
@@ -442,7 +452,10 @@ mod tests {
             let ap = AppPaths::new().unwrap();
             let config = ap.config_dir();
             assert!(
-                config.to_str().unwrap().contains("Application Support/wx-cli/config"),
+                config
+                    .to_str()
+                    .unwrap()
+                    .contains("Application Support/wx-cli/config"),
                 "macOS config should be under Application Support: {:?}",
                 config
             );
@@ -464,7 +477,10 @@ mod tests {
             let ap = AppPaths::new().unwrap();
             let state = ap.state_root();
             assert!(
-                state.to_str().unwrap().contains("Application Support/wx-cli/state"),
+                state
+                    .to_str()
+                    .unwrap()
+                    .contains("Application Support/wx-cli/state"),
                 "macOS state should be under Application Support: {:?}",
                 state
             );

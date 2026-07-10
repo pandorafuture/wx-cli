@@ -302,11 +302,8 @@ mod tests {
 
     #[test]
     fn non_group_returns_fallback_unchanged() {
-        let (sender, content) = parse_group_sender(
-            false,
-            "hello world".to_string(),
-            "fallback".to_string(),
-        );
+        let (sender, content) =
+            parse_group_sender(false, "hello world".to_string(), "fallback".to_string());
         assert_eq!(sender, "fallback");
         assert_eq!(content, "hello world");
     }
@@ -335,22 +332,16 @@ mod tests {
 
     #[test]
     fn group_empty_content_after_separator() {
-        let (sender, content) = parse_group_sender(
-            true,
-            "wxid_abc:\n".to_string(),
-            "fallback".to_string(),
-        );
+        let (sender, content) =
+            parse_group_sender(true, "wxid_abc:\n".to_string(), "fallback".to_string());
         assert_eq!(sender, "wxid_abc");
         assert_eq!(content, "");
     }
 
     #[test]
     fn group_only_colon_before_newline() {
-        let (sender, content) = parse_group_sender(
-            true,
-            ":\nsome content".to_string(),
-            "fallback".to_string(),
-        );
+        let (sender, content) =
+            parse_group_sender(true, ":\nsome content".to_string(), "fallback".to_string());
         assert_eq!(sender, "");
         assert_eq!(content, "some content");
     }

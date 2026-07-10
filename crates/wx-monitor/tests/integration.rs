@@ -217,10 +217,7 @@ async fn monitor_detects_session_change() {
 
     // Should be an Updated event for wxid_bob (the new session)
     assert_eq!(event.username, "wxid_bob");
-    assert!(matches!(
-        event.kind,
-        wx_monitor::SessionEventKind::Updated
-    ));
+    assert!(matches!(event.kind, wx_monitor::SessionEventKind::Updated));
 
     // Stop monitor and assert clean exit
     monitor.stop();

@@ -184,10 +184,7 @@ fn voice_query_with_conn_returns_stable_not_found_errors() {
 fn voice_query_with_conn_hint_returns_chat_name_id_from_indexed_lookup() {
     let tmp = TempDir::new().unwrap();
     let db_path = tmp.path().join("media.db");
-    create_indexed_media_db(
-        &db_path,
-        &[(55, 1000, 1, "srv_hint_1", b"hinted_blob")],
-    );
+    create_indexed_media_db(&db_path, &[(55, 1000, 1, "srv_hint_1", b"hinted_blob")]);
     let conn = rusqlite::Connection::open(&db_path).unwrap();
 
     let blob = wx_media::extract_voice_with_conn_hint(&conn, "srv_hint_1", Some(55)).unwrap();

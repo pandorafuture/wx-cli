@@ -77,8 +77,7 @@ impl VisibilityIndex {
     ///
     /// Hidden talkers OR hidden senders in visible groups cannot access media.
     pub fn allows_media_for_sender(&self, talker: &str, sender: &str) -> bool {
-        !self.hidden_persons.contains(talker)
-            && !self.is_hidden_sender_in_group(talker, sender)
+        !self.hidden_persons.contains(talker) && !self.is_hidden_sender_in_group(talker, sender)
     }
 }
 
@@ -230,12 +229,9 @@ mod tests {
     #[test]
     fn allows_media_for_sender_covers_both_levels() {
         let idx = VisibilityIndex {
-            hidden_persons: vec![
-                "hidden_group@chatroom".to_string(),
-                "wxid_spam".to_string(),
-            ]
-            .into_iter()
-            .collect(),
+            hidden_persons: vec!["hidden_group@chatroom".to_string(), "wxid_spam".to_string()]
+                .into_iter()
+                .collect(),
         };
         // Hidden talker → no media
         assert!(!idx.allows_media_for_sender("hidden_group@chatroom", "wxid_anyone"));

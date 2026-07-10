@@ -197,10 +197,9 @@ impl VoiceConnectionPool {
     fn open_all(&self) -> Vec<Connection> {
         let mut conns = Vec::new();
         for path in &self.db_paths {
-            if let Ok(conn) = Connection::open_with_flags(
-                path,
-                rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY,
-            ) {
+            if let Ok(conn) =
+                Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+            {
                 conns.push(conn);
             }
         }
@@ -209,7 +208,7 @@ impl VoiceConnectionPool {
 
     pub fn with_connections<R>(&self, f: impl FnOnce(&[Connection]) -> R) -> R {
         thread_local! {
-            static CONNS: RefCell<Option<(u64, Vec<Connection>)>> = RefCell::new(None);
+            static CONNS: RefCell<Option<(u64, Vec<Connection>)>> = const { RefCell::new(None) };
         }
         CONNS.with(|cell| {
             let mut borrow = cell.borrow_mut();
@@ -242,16 +241,12 @@ impl HardlinkConnectionPool {
     }
 
     fn open(&self) -> Option<Connection> {
-        Connection::open_with_flags(
-            &self.db_path,
-            rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY,
-        )
-        .ok()
+        Connection::open_with_flags(&self.db_path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY).ok()
     }
 
     pub fn with_connection<R>(&self, f: impl FnOnce(&Connection) -> R) -> Option<R> {
         thread_local! {
-            static CONN: RefCell<Option<(u64, Connection)>> = RefCell::new(None);
+            static CONN: RefCell<Option<(u64, Connection)>> = const { RefCell::new(None) };
         }
         CONN.with(|cell| {
             let mut borrow = cell.borrow_mut();
@@ -299,6 +294,7 @@ pub struct DupMap {
 // ---------------------------------------------------------------------------
 
 /// Build shared context from account/session info (pre-compute stage).
+#[allow(clippy::too_many_arguments)]
 pub fn build_shared_context(
     attach_dir: PathBuf,
     media_dir: PathBuf,
@@ -432,12 +428,7 @@ pub fn dedup(tasks: Vec<MediaTask>) -> (Vec<MediaTask>, DupMap) {
         unique.push(task);
     }
 
-    (
-        unique,
-        DupMap {
-            duplicates,
-        },
-    )
+    (unique, DupMap { duplicates })
 }
 
 /// Default rayon thread pool size: min(num_cpus, 4).
@@ -469,7 +460,12 @@ pub fn resolve_parallel(
         batches.entry(task.kind()).or_default().push(task);
     }
 
-    let order = [TaskKind::Image, TaskKind::Voice, TaskKind::Video, TaskKind::File];
+    let order = [
+        TaskKind::Image,
+        TaskKind::Voice,
+        TaskKind::Video,
+        TaskKind::File,
+    ];
     let mut all_results = Vec::new();
     let mut all_errors = ErrorSummary::default();
 
@@ -531,7 +527,10 @@ pub fn resolve_parallel(
 fn resolve_one(task: &MediaTask, ctx: &SharedContext) -> ResolvedAsset {
     match task {
         MediaTask::Image { md5, msg_index } => resolve_image(md5, *msg_index, ctx),
-        MediaTask::Voice { server_id, msg_index } => resolve_voice(*server_id, *msg_index, ctx),
+        MediaTask::Voice {
+            server_id,
+            msg_index,
+        } => resolve_voice(*server_id, *msg_index, ctx),
         MediaTask::Video {
             md5,
             create_time,
@@ -668,7 +667,8 @@ fn resolve_voice(server_id: i64, msg_index: usize, ctx: &SharedContext) -> Resol
 
     let blob = ctx.voice_pool.with_connections(|conns| {
         for conn in conns {
-            if let Ok(b) = wx_media::extract_voice_with_conn_hint(conn, &svr_id, chat_name_id_hint) {
+            if let Ok(b) = wx_media::extract_voice_with_conn_hint(conn, &svr_id, chat_name_id_hint)
+            {
                 return Some(b);
             }
         }
@@ -750,9 +750,9 @@ fn resolve_video(
     ctx: &SharedContext,
 ) -> ResolvedAsset {
     // Try hardlink DB first
-    let hardlink_result = ctx.hardlink_pool.with_connection(|conn| {
-        wx_media::query_hardlink_with_conn(conn, "video", md5)
-    });
+    let hardlink_result = ctx
+        .hardlink_pool
+        .with_connection(|conn| wx_media::query_hardlink_with_conn(conn, "video", md5));
 
     let entries = match hardlink_result {
         Some(Ok(e)) => Some(e),
@@ -860,9 +860,9 @@ fn resolve_file(
     ctx: &SharedContext,
 ) -> ResolvedAsset {
     // Try hardlink DB first
-    let hardlink_result = ctx.hardlink_pool.with_connection(|conn| {
-        wx_media::query_hardlink_with_conn(conn, "file", md5)
-    });
+    let hardlink_result = ctx
+        .hardlink_pool
+        .with_connection(|conn| wx_media::query_hardlink_with_conn(conn, "file", md5));
 
     let entries = match hardlink_result {
         Some(Ok(e)) => Some(e),
@@ -889,7 +889,7 @@ fn resolve_file(
                 let filename = format!("{}_{}", md5, entry.file_name);
                 if ctx.write_gate.claim(&filename) {
                     let out_path = ctx.output_media_dir.join(&filename);
-                    if let Err(e) = std::fs::copy(&source, &out_path) {
+                    if let Err(e) = std::fs::copy(source, &out_path) {
                         return ResolvedAsset {
                             msg_index,
                             asset: None,
@@ -973,23 +973,19 @@ pub fn collect(
     let mut errors = ErrorSummary::default();
 
     // Build index from results by msg_index
-    let mut by_index: HashMap<usize, (Option<MediaAsset>, Vec<TaskTag>, Option<ExportError>)> =
-        HashMap::new();
+    let mut by_index: HashMap<usize, (Option<MediaAsset>, Vec<TaskTag>)> = HashMap::new();
     for r in results {
         if let Some(e) = r.error {
             errors.errors.push(e);
         }
-        by_index.insert(
-            r.msg_index,
-            (r.asset, r.tags, None),
-        );
+        by_index.insert(r.msg_index, (r.asset, r.tags));
     }
 
     // Place canonical results — count tags always, copy asset only when present.
     // Matches old MediaBridge: SkippedVideo/SkippedFile stats counted unconditionally;
     // image stats (ThumbnailImage, WxgfTranscoded, WxgfFallback) also counted
     // because canonical always does the full resolve.
-    for (msg_idx, (asset, tags, _)) in &by_index {
+    for (msg_idx, (asset, tags)) in &by_index {
         apply_tags(&mut stats, tags);
         if let Some(a) = asset {
             media_map[*msg_idx].push(a.clone());
@@ -1003,8 +999,12 @@ pub fn collect(
     // This two-step approach matches old MediaBridge behavior where skipped/fallback
     // stats were counted regardless of dedup, but image stats only counted once.
     for (dup_msg_idx, canonical_msg_idx) in &dup_map.duplicates {
-        if let Some((asset, tags, _)) = by_index.get(canonical_msg_idx) {
-            let dup_tags: Vec<TaskTag> = tags.iter().copied().filter(|t| t.counts_on_duplicate()).collect();
+        if let Some((asset, tags)) = by_index.get(canonical_msg_idx) {
+            let dup_tags: Vec<TaskTag> = tags
+                .iter()
+                .copied()
+                .filter(|t| t.counts_on_duplicate())
+                .collect();
             apply_tags(&mut stats, &dup_tags);
             if let Some(a) = asset {
                 media_map[*dup_msg_idx].push(a.clone());
@@ -1416,7 +1416,10 @@ mod tests {
         // Second task: Voice
         assert!(matches!(
             &tasks[1],
-            MediaTask::Voice { server_id: 2, msg_index: 1 }
+            MediaTask::Voice {
+                server_id: 2,
+                msg_index: 1
+            }
         ));
     }
 
@@ -1446,7 +1449,11 @@ mod tests {
         let encrypted: Vec<u8> = wxgf.iter().map(|b| b ^ xor_key).collect();
 
         let username_hash = format!("{:x}", wx_media::md5_hash(talker.as_bytes()));
-        let img_dir = root.join("attach").join(&username_hash).join("2026-03").join("Img");
+        let img_dir = root
+            .join("attach")
+            .join(&username_hash)
+            .join("2026-03")
+            .join("Img");
         std::fs::create_dir_all(&img_dir).unwrap();
         std::fs::write(img_dir.join(format!("{md5}.dat")), &encrypted).unwrap();
 
@@ -1572,10 +1579,7 @@ mod tests {
         let silk = sample_silk();
         create_voice_media_db(
             &media_dir.join("media_0.db"),
-            &[
-                (55, 1000, 1, 101, &silk),
-                (55, 1001, 2, 102, &silk),
-            ],
+            &[(55, 1000, 1, 101, &silk), (55, 1001, 2, 102, &silk)],
         );
 
         let ctx = Arc::new(build_shared_context(

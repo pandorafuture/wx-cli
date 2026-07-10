@@ -64,10 +64,7 @@ pub async fn cmd_key_extract(timeout_secs: u64) -> Result<(), Box<dyn std::error
         Some(matched.base_wxid.clone()),
     );
     store.save_default()?;
-    eprintln!(
-        "Key saved to {:?}",
-        wx_keychain::KeyStore::default_path()?
-    );
+    eprintln!("Key saved to {:?}", wx_keychain::KeyStore::default_path()?);
 
     Ok(())
 }
@@ -102,8 +99,7 @@ pub fn cmd_key_scan() -> Result<(), Box<dyn std::error::Error>> {
 
     // Scan process memory.
     eprintln!("Scanning WeChat process memory...");
-    let results =
-        wx_keychain::capture_key_mach(pid, &accounts, &wx_decrypt::MACOS_4_1_7_31)?;
+    let results = wx_keychain::capture_key_mach(pid, &accounts, &wx_decrypt::MACOS_4_1_7_31)?;
 
     // Count total pairs across all results
     let total_pairs: usize = results
@@ -126,18 +122,15 @@ pub fn cmd_key_scan() -> Result<(), Box<dyn std::error::Error>> {
     for r in &results {
         let matched = &r.matched_account;
 
-        let nickname = wx_keychain::resolve_nickname(
-            &matched.data_dir,
-            &r.key_material,
-            &matched.base_wxid,
-        )
-        .unwrap_or_else(|e| {
-            eprintln!(
-                "  Warning: nickname resolution failed for {}: {e}",
-                matched.account_id
-            );
-            None
-        });
+        let nickname =
+            wx_keychain::resolve_nickname(&matched.data_dir, &r.key_material, &matched.base_wxid)
+                .unwrap_or_else(|e| {
+                    eprintln!(
+                        "  Warning: nickname resolution failed for {}: {e}",
+                        matched.account_id
+                    );
+                    None
+                });
 
         let pairs = match &r.key_material {
             wx_decrypt::KeyMaterial::EncKeys(pairs) => pairs,
@@ -173,10 +166,7 @@ pub fn cmd_key_scan() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     store.save_default()?;
-    eprintln!(
-        "Keys saved to {:?}",
-        wx_keychain::KeyStore::default_path()?
-    );
+    eprintln!("Keys saved to {:?}", wx_keychain::KeyStore::default_path()?);
 
     Ok(())
 }

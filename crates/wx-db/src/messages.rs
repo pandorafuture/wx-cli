@@ -323,9 +323,11 @@ impl WechatDb {
         msg_type_filter: Option<u32>,
     ) -> usize {
         let result = if let Some(mt) = msg_type_filter {
-            conn.query_row(sql, [start_time, end_time, mt as i64], |row: &rusqlite::Row<'_>| {
-                row.get::<_, i64>(0)
-            })
+            conn.query_row(
+                sql,
+                [start_time, end_time, mt as i64],
+                |row: &rusqlite::Row<'_>| row.get::<_, i64>(0),
+            )
         } else {
             conn.query_row(sql, [start_time, end_time], |row: &rusqlite::Row<'_>| {
                 row.get::<_, i64>(0)

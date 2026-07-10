@@ -280,8 +280,12 @@ pub async fn cmd_serve(
         hardlink_db_conn,
         raw_key: acct.raw_key,
         dat_decrypt,
-        voice_cache: Arc::new(std::sync::Mutex::new(LruCache::new(NonZeroUsize::new(256).unwrap()))),
-        image_xor_cache: Arc::new(std::sync::Mutex::new(LruCache::new(NonZeroUsize::new(1024).unwrap()))),
+        voice_cache: Arc::new(std::sync::Mutex::new(LruCache::new(
+            NonZeroUsize::new(256).unwrap(),
+        ))),
+        image_xor_cache: Arc::new(std::sync::Mutex::new(LruCache::new(
+            NonZeroUsize::new(1024).unwrap(),
+        ))),
         name2id_cache: Arc::new(std::sync::Mutex::new(None)),
         media_db_paths: Arc::new(std::sync::Mutex::new(None)),
     });

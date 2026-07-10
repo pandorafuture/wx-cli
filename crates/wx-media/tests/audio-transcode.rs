@@ -12,8 +12,13 @@ fn sample_silk() -> Vec<u8> {
 
 #[cfg(feature = "audio")]
 fn long_sample_silk() -> Vec<u8> {
-    silk_rs::encode_silk(vec![0_u8; silent_pcm_frame().len() * 250], 24_000, 24_000, true)
-        .unwrap()
+    silk_rs::encode_silk(
+        vec![0_u8; silent_pcm_frame().len() * 250],
+        24_000,
+        24_000,
+        true,
+    )
+    .unwrap()
 }
 
 #[cfg(feature = "audio")]

@@ -5,7 +5,9 @@ use wx_context::{register_mm_fts_tokenizer, AccountContext, ContactResolver, Res
 use super::thin_client::{ThinClient, ThinClientCliArgs, ThinClientOptions};
 use crate::output::{JsonEnvelope, PagingMeta, StatsMeta};
 use crate::schema::{enrich_message_as_hit, enrich_native_fts_hit, SearchHit};
-use crate::util::{effective_limit_all, open_db_all, print_cache_stats, print_detection_note, try_remote_or_local};
+use crate::util::{
+    effective_limit_all, open_db_all, print_cache_stats, print_detection_note, try_remote_or_local,
+};
 use crate::OutputFormat;
 
 // Unused imports kept for Task 6 cleanup reference:
@@ -67,12 +69,8 @@ fn load_local_search(
             Ok(conn)
         }) {
             Ok(conn) => {
-                match wx_db::native_fts::search_message_fts(
-                    &conn,
-                    keyword,
-                    effective_limit,
-                    offset,
-                ) {
+                match wx_db::native_fts::search_message_fts(&conn, keyword, effective_limit, offset)
+                {
                     Ok(result) => {
                         return native_fts_envelope(
                             result,

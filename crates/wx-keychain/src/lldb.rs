@@ -46,7 +46,11 @@ pub async fn capture_key(
     // Pre-read salts from all accounts. Skip unreadable DBs.
     let account_salts: Vec<([u8; 16], &AccountDirInfo)> = accounts
         .iter()
-        .filter_map(|a| wx_decrypt::read_db_salt(&a.message_db_path).ok().map(|salt| (salt, a)))
+        .filter_map(|a| {
+            wx_decrypt::read_db_salt(&a.message_db_path)
+                .ok()
+                .map(|salt| (salt, a))
+        })
         .collect();
 
     if account_salts.is_empty() {

@@ -8,13 +8,11 @@ use axum::http::HeaderValue;
 use axum::response::{IntoResponse, Response};
 use tower::ServiceExt;
 use tower_http::services::ServeFile;
-use wx_db::{
-    open_readonly_connection, Message, MessageContent, MessageQuery, SortOrder, WechatDb,
-};
+use wx_db::{open_readonly_connection, Message, MessageContent, MessageQuery, SortOrder, WechatDb};
 
-use crate::util::{format_month, sanitize_filename};
 use super::error::ServeError;
 use super::state::{AppState, CachedVoicePayload};
+use crate::util::{format_month, sanitize_filename};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum MediaFormat {
@@ -147,8 +145,9 @@ async fn resolve_media(
             ))),
             MessageContent::Voice => {
                 let db_paths = {
-                    let mut cache_guard = state_for_cache.media_db_paths.lock()
-                        .map_err(|e: std::sync::PoisonError<_>| ServeError::Internal(e.to_string()))?;
+                    let mut cache_guard = state_for_cache.media_db_paths.lock().map_err(
+                        |e: std::sync::PoisonError<_>| ServeError::Internal(e.to_string()),
+                    )?;
                     match cache_guard.as_ref() {
                         Some(paths) => paths.clone(),
                         None => {
@@ -297,7 +296,7 @@ fn resolve_voice(
     let mut first_db_error: Option<String> = None;
 
     for db_path in db_paths {
-        let conn = match open_readonly_connection(&db_path, raw_key.as_ref()) {
+        let conn = match open_readonly_connection(db_path, raw_key.as_ref()) {
             Ok(conn) => conn,
             Err(err) => {
                 if first_db_error.is_none() {

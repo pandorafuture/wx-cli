@@ -298,9 +298,7 @@ fn load_local_query(
     // When limit pushdown was used (non-anchor, non-all), total_rows only reflects the
     // scanned window. Use a lightweight COUNT(*) query to get the actual DB-level total.
     if !has_anchor && !all {
-        let mt_filter = msg_type
-            .as_ref()
-            .and_then(|s| wx_db::parse_msg_type(s));
+        let mt_filter = msg_type.as_ref().and_then(|s| wx_db::parse_msg_type(s));
         let db_total = db.count_messages(
             &talker,
             since.unwrap_or(0),

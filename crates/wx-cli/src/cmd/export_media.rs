@@ -421,7 +421,10 @@ impl MediaBridge {
     }
 }
 
-pub fn export_image_bytes(decoded_data: Vec<u8>, decoded_ext: &str) -> (Vec<u8>, String, bool, bool) {
+pub fn export_image_bytes(
+    decoded_data: Vec<u8>,
+    decoded_ext: &str,
+) -> (Vec<u8>, String, bool, bool) {
     if decoded_ext != "wxgf" {
         return (decoded_data, decoded_ext.to_string(), false, false);
     }

@@ -58,7 +58,11 @@ pub fn reset_ffmpeg_cache() {
     FFPROBE_CACHED.store(false, Ordering::Release);
 }
 
-fn run_command_with_piped_input(bin: String, input: &[u8], args: &[&str]) -> Result<Output, MediaError> {
+fn run_command_with_piped_input(
+    bin: String,
+    input: &[u8],
+    args: &[&str],
+) -> Result<Output, MediaError> {
     let mut child = Command::new(&bin)
         .args(args)
         .stdin(Stdio::piped())
@@ -76,10 +80,12 @@ fn run_command_with_piped_input(bin: String, input: &[u8], args: &[&str]) -> Res
             })
         });
 
-        let output = child.wait_with_output().map_err(|e| MediaError::FfmpegFailed {
-            status: -1,
-            stderr: e.to_string(),
-        })?;
+        let output = child
+            .wait_with_output()
+            .map_err(|e| MediaError::FfmpegFailed {
+                status: -1,
+                stderr: e.to_string(),
+            })?;
 
         if let Some(writer) = writer {
             let _ = writer.join();

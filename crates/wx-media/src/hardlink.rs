@@ -22,7 +22,7 @@ pub fn query_hardlink_with_conn(
     media_type: &str,
     key: &str,
 ) -> Result<Vec<HardlinkEntry>, MediaError> {
-    let table = resolve_table(&conn, media_type)?;
+    let table = resolve_table(conn, media_type)?;
 
     let query = format!(
         "SELECT f.md5, f.file_name, f.file_size, f.modify_time,

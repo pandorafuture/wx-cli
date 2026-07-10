@@ -20,7 +20,9 @@ use crate::OutputFormat;
 const START_TIMEOUT: Duration = Duration::from_secs(10);
 const STOP_TIMEOUT: Duration = Duration::from_secs(5);
 
-fn resolve_app_paths(runtime_root: Option<PathBuf>) -> Result<AppPaths, Box<dyn std::error::Error>> {
+fn resolve_app_paths(
+    runtime_root: Option<PathBuf>,
+) -> Result<AppPaths, Box<dyn std::error::Error>> {
     match runtime_root {
         Some(root) => Ok(AppPaths::with_runtime_root(root)?),
         None => Ok(AppPaths::new()?),
@@ -120,9 +122,8 @@ pub async fn cmd_server_stop(args: ServerStopArgs) -> Result<(), Box<dyn std::er
 
 pub async fn cmd_server_restart(args: ServerRestartArgs) -> Result<(), Box<dyn std::error::Error>> {
     let ap = resolve_app_paths(args.runtime_root.clone())?;
-    let config = load_launch_config(&ap)?.ok_or(
-        "no persisted server launch configuration found; run `wx-cli server run` first",
-    )?;
+    let config = load_launch_config(&ap)?
+        .ok_or("no persisted server launch configuration found; run `wx-cli server run` first")?;
 
     let stop_args = ServerStopArgs {
         runtime_root: args.runtime_root.clone(),
@@ -286,9 +287,7 @@ fn spawn_worker(
         command.arg("--runtime-root").arg(root);
     }
 
-    command
-        .arg("--worker-id")
-        .arg(worker_id);
+    command.arg("--worker-id").arg(worker_id);
 
     if let Some(key) = &config.key {
         command.arg("--key").arg(key);

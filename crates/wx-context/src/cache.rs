@@ -773,10 +773,7 @@ mod tests {
                 &tmp.path().join("cache").join("test.db"),
             )
             .unwrap_err();
-        assert!(matches!(
-            err,
-            wx_decrypt::DecryptError::NoMatchingEncKey
-        ));
+        assert!(matches!(err, wx_decrypt::DecryptError::NoMatchingEncKey));
     }
 
     #[test]

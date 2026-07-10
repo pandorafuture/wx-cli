@@ -6,7 +6,9 @@ use rusqlite::types::ValueRef;
 use rusqlite::Connection;
 use serde::Serialize;
 
-use crate::decode::{check_column_exists, decode_content, msg_table_name, parse_content, parse_group_sender};
+use crate::decode::{
+    check_column_exists, decode_content, msg_table_name, parse_content, parse_group_sender,
+};
 use crate::error::DbError;
 use crate::model::{split_local_type, MessageContent};
 use crate::open::WechatDb;
@@ -414,8 +416,7 @@ impl WechatDb {
         )?;
 
         for shard in &self.shards {
-            let shard_conn =
-                WechatDb::open_shard_with_key(shard, self.sqlcipher_key.as_ref())?;
+            let shard_conn = WechatDb::open_shard_with_key(shard, self.sqlcipher_key.as_ref())?;
 
             // List Msg_* tables in this shard
             let mut table_stmt = shard_conn.prepare(
@@ -574,7 +575,8 @@ impl WechatDb {
         let decoded_text = decode_content(&raw_content, wcdb_ct)?;
 
         // Group sender parsing
-        let (sender, content_text) = parse_group_sender(is_group, decoded_text, sender_from_name2id);
+        let (sender, content_text) =
+            parse_group_sender(is_group, decoded_text, sender_from_name2id);
 
         let (msg_type, sub_type) = split_local_type(local_type as i64);
 

@@ -37,9 +37,7 @@ fn extract_wxid_from_data_dir(data_dir: &Path) -> Result<String, MediaError> {
 
     Ok(data_dir.parent().map_or_else(
         || extract_wxid(dir_name),
-        |root| {
-            wx_keychain::process::extract_base_wxid_for_account_dir_under_root(root, dir_name)
-        },
+        |root| wx_keychain::process::extract_base_wxid_for_account_dir_under_root(root, dir_name),
     ))
 }
 

@@ -118,11 +118,7 @@ impl DecryptCache {
         wx_decrypt::dispatch_decrypt_db(src, dst, &self.key_material, self.params)
     }
 
-    fn do_decrypt_wal(
-        &self,
-        wal: &Path,
-        dst: &Path,
-    ) -> Result<usize, wx_decrypt::DecryptError> {
+    fn do_decrypt_wal(&self, wal: &Path, dst: &Path) -> Result<usize, wx_decrypt::DecryptError> {
         wx_decrypt::dispatch_decrypt_wal(wal, dst, &self.key_material, self.params)
     }
 }

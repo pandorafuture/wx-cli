@@ -530,10 +530,7 @@ mod tests {
     #[test]
     fn extract_quote_fromusr_normal() {
         let xml = r#"<msg><appmsg><title>reply</title><refermsg><fromusr>wxid_alice</fromusr><content>hi</content></refermsg></appmsg></msg>"#;
-        assert_eq!(
-            extract_quote_fromusr(xml),
-            Some("wxid_alice".to_string())
-        );
+        assert_eq!(extract_quote_fromusr(xml), Some("wxid_alice".to_string()));
     }
 
     #[test]
@@ -552,19 +549,13 @@ mod tests {
     fn extract_quote_fromusr_prefers_chatusr_in_group() {
         // In group chats, <fromusr> is the chatroom ID, <chatusr> is the actual sender
         let xml = r#"<msg><appmsg><title>reply</title><refermsg><fromusr>group@chatroom</fromusr><chatusr>wxid_sender</chatusr><displayname>Sender</displayname><content>hi</content></refermsg></appmsg></msg>"#;
-        assert_eq!(
-            extract_quote_fromusr(xml),
-            Some("wxid_sender".to_string())
-        );
+        assert_eq!(extract_quote_fromusr(xml), Some("wxid_sender".to_string()));
     }
 
     #[test]
     fn extract_quote_fromusr_falls_back_to_fromusr_without_chatusr() {
         // In private chats, only <fromusr> exists (no <chatusr>)
         let xml = r#"<msg><appmsg><title>reply</title><refermsg><fromusr>wxid_bob</fromusr><displayname>Bob</displayname><content>hi</content></refermsg></appmsg></msg>"#;
-        assert_eq!(
-            extract_quote_fromusr(xml),
-            Some("wxid_bob".to_string())
-        );
+        assert_eq!(extract_quote_fromusr(xml), Some("wxid_bob".to_string()));
     }
 }

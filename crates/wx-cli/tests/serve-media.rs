@@ -98,8 +98,10 @@ fn serve_media_visible_sender_in_group_with_hidden_persons_not_visibility_blocke
         let body = String::from_utf8_lossy(&response.body);
         // The media endpoint was reached (not blocked by visibility) but the asset
         // isn't on disk. Acceptable.
-        assert!(!body.contains("message not found"),
-            "visible sender should NOT get visibility 404: {body}");
+        assert!(
+            !body.contains("message not found"),
+            "visible sender should NOT get visibility 404: {body}"
+        );
     }
     // If 200, even better — means asset resolution succeeded
 }
@@ -317,10 +319,7 @@ fn spawn_test_server_with_env(envs: &[(&str, &str)]) -> TestServer {
     spawn_test_server_with_setup(envs, &[])
 }
 
-fn spawn_test_server_with_setup(
-    envs: &[(&str, &str)],
-    hidden_contacts: &[&str],
-) -> TestServer {
+fn spawn_test_server_with_setup(envs: &[(&str, &str)], hidden_contacts: &[&str]) -> TestServer {
     let fixture = create_fixture();
     if !hidden_contacts.is_empty() {
         write_settings(fixture.path(), hidden_contacts);
@@ -864,8 +863,8 @@ fn create_encrypted_message_db(path: &Path, raw_key: &[u8; 32]) {
                 params![
                     900_i64,
                     7001_i64,
-                    3_i64,   // msg_type=3 (image)
-                    3_i64,   // real_sender_id=3 → HIDDEN_SENDER
+                    3_i64, // msg_type=3 (image)
+                    3_i64, // real_sender_id=3 → HIDDEN_SENDER
                     1_700_000_900_i64,
                     Vec::<u8>::new(),
                     group_image_info,
@@ -885,8 +884,8 @@ fn create_encrypted_message_db(path: &Path, raw_key: &[u8; 32]) {
                 params![
                     910_i64,
                     7002_i64,
-                    3_i64,   // msg_type=3 (image)
-                    1_i64,   // real_sender_id=1 → TALKER (visible)
+                    3_i64, // msg_type=3 (image)
+                    1_i64, // real_sender_id=1 → TALKER (visible)
                     1_700_000_910_i64,
                     Vec::<u8>::new(),
                     group_visible_info,

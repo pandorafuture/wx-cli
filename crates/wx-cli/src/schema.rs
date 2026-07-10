@@ -540,7 +540,11 @@ mod tests {
         }
     }
 
-    fn make_enriched(sender: &str, talker: &str, content: wx_db::MessageContent) -> EnrichedMessage {
+    fn make_enriched(
+        sender: &str,
+        talker: &str,
+        content: wx_db::MessageContent,
+    ) -> EnrichedMessage {
         let msg = make_message(sender, talker, content);
         let snippet = format_content(&msg);
         EnrichedMessage {
@@ -562,21 +566,33 @@ mod tests {
     #[test]
     fn project_message_item_non_group_does_not_filter() {
         let vis = vis_with_hidden_persons(&["wxid_spam"]);
-        let msg = make_enriched("wxid_spam", "wxid_spam", wx_db::MessageContent::Text("hi".into()));
+        let msg = make_enriched(
+            "wxid_spam",
+            "wxid_spam",
+            wx_db::MessageContent::Text("hi".into()),
+        );
         assert!(project_message_item(msg, "wxid_spam", &vis).is_some());
     }
 
     #[test]
     fn project_message_item_group_hidden_sender_filtered() {
         let vis = vis_with_hidden_persons(&["wxid_spam"]);
-        let msg = make_enriched("wxid_spam", "group@chatroom", wx_db::MessageContent::Text("spam".into()));
+        let msg = make_enriched(
+            "wxid_spam",
+            "group@chatroom",
+            wx_db::MessageContent::Text("spam".into()),
+        );
         assert!(project_message_item(msg, "group@chatroom", &vis).is_none());
     }
 
     #[test]
     fn project_message_item_group_visible_sender_kept() {
         let vis = vis_with_hidden_persons(&["wxid_spam"]);
-        let msg = make_enriched("wxid_normal", "group@chatroom", wx_db::MessageContent::Text("hi".into()));
+        let msg = make_enriched(
+            "wxid_normal",
+            "group@chatroom",
+            wx_db::MessageContent::Text("hi".into()),
+        );
         assert!(project_message_item(msg, "group@chatroom", &vis).is_some());
     }
 
@@ -679,8 +695,16 @@ mod tests {
     fn project_message_items_show_hidden_bypasses() {
         let vis = vis_with_hidden_persons(&["wxid_spam"]);
         let items = vec![
-            make_enriched("wxid_spam", "group@chatroom", wx_db::MessageContent::Text("spam".into())),
-            make_enriched("wxid_normal", "group@chatroom", wx_db::MessageContent::Text("hi".into())),
+            make_enriched(
+                "wxid_spam",
+                "group@chatroom",
+                wx_db::MessageContent::Text("spam".into()),
+            ),
+            make_enriched(
+                "wxid_normal",
+                "group@chatroom",
+                wx_db::MessageContent::Text("hi".into()),
+            ),
         ];
         let result = project_message_items(items, "group@chatroom", &vis, true);
         assert_eq!(result.len(), 2);
@@ -690,8 +714,16 @@ mod tests {
     fn project_message_items_filters_hidden_sender() {
         let vis = vis_with_hidden_persons(&["wxid_spam"]);
         let items = vec![
-            make_enriched("wxid_spam", "group@chatroom", wx_db::MessageContent::Text("spam".into())),
-            make_enriched("wxid_normal", "group@chatroom", wx_db::MessageContent::Text("hi".into())),
+            make_enriched(
+                "wxid_spam",
+                "group@chatroom",
+                wx_db::MessageContent::Text("spam".into()),
+            ),
+            make_enriched(
+                "wxid_normal",
+                "group@chatroom",
+                wx_db::MessageContent::Text("hi".into()),
+            ),
         ];
         let result = project_message_items(items, "group@chatroom", &vis, false);
         assert_eq!(result.len(), 1);
@@ -760,6 +792,9 @@ mod tests {
         };
         project_session_sender(&mut session, &vis);
         assert_eq!(session.session.summary, "normal message");
-        assert_eq!(session.session.last_msg_sender.as_deref(), Some("wxid_normal"));
+        assert_eq!(
+            session.session.last_msg_sender.as_deref(),
+            Some("wxid_normal")
+        );
     }
 }

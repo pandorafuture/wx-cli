@@ -95,9 +95,15 @@ fn ignore_tags_hide_matching_contact_at_both_talker_and_sender_level() {
             "json",
         ],
     );
-    let items = group_messages["items"].as_array().expect("query items array");
+    let items = group_messages["items"]
+        .as_array()
+        .expect("query items array");
     // The only group message is from wxid_hidden_tagged; it should be filtered out
-    assert_eq!(items.len(), 0, "tagged contact's group messages should be sender-level filtered: {group_messages}");
+    assert_eq!(
+        items.len(),
+        0,
+        "tagged contact's group messages should be sender-level filtered: {group_messages}"
+    );
 
     // Session should show placeholder for group where last sender is tagged
     let sessions = run_json(
@@ -112,9 +118,7 @@ fn ignore_tags_hide_matching_contact_at_both_talker_and_sender_level() {
             "json",
         ],
     );
-    let items = sessions["items"]
-        .as_array()
-        .expect("sessions items array");
+    let items = sessions["items"].as_array().expect("sessions items array");
     let group_session = items
         .iter()
         .find(|item| item["username"].as_str() == Some(TALKER_GROUP));
@@ -331,16 +335,8 @@ fn create_encrypted_contact_db(path: &Path, raw_key: &[u8; 32]) {
             )
             .expect("insert bob");
 
-            let tagged_extra = encode_extra_buffer_for_test(
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some("1"),
-            );
+            let tagged_extra =
+                encode_extra_buffer_for_test(None, None, None, None, None, None, None, Some("1"));
             conn.execute(
                 "INSERT INTO contact (username, nick_name, extra_buffer) VALUES (?1, ?2, ?3)",
                 params![TALKER_TAGGED, "Sensitive Person", tagged_extra],
@@ -451,8 +447,11 @@ fn create_encrypted_message_db(path: &Path, raw_key: &[u8; 32]) {
             group = TABLE_GROUP,
         ),
         |conn| {
-            conn.execute("INSERT INTO Timestamp VALUES (?1)", params![1_700_000_000_i64])
-                .expect("insert timestamp");
+            conn.execute(
+                "INSERT INTO Timestamp VALUES (?1)",
+                params![1_700_000_000_i64],
+            )
+            .expect("insert timestamp");
             conn.execute(
                 "INSERT INTO Name2Id VALUES (?1, ?2)",
                 params![1_i64, TALKER_ALICE],
@@ -729,8 +728,11 @@ fn create_sender_account(root: &Path) {
             group = TABLE_GROUP_SENDER,
         ),
         |conn| {
-            conn.execute("INSERT INTO Timestamp VALUES (?1)", params![1_700_000_000_i64])
-                .expect("insert timestamp");
+            conn.execute(
+                "INSERT INTO Timestamp VALUES (?1)",
+                params![1_700_000_000_i64],
+            )
+            .expect("insert timestamp");
             conn.execute(
                 "INSERT INTO Name2Id VALUES (?1, ?2)",
                 params![1_i64, TALKER_ALICE],
@@ -754,8 +756,15 @@ fn create_sender_account(root: &Path) {
                     table = TABLE_ALICE
                 ),
                 params![
-                    100_i64, 3001_i64, 1_i64, 1_i64, 1_700_000_301_i64,
-                    b"private hello" as &[u8], None::<Vec<u8>>, 0_i32, None::<i32>,
+                    100_i64,
+                    3001_i64,
+                    1_i64,
+                    1_i64,
+                    1_700_000_301_i64,
+                    b"private hello" as &[u8],
+                    None::<Vec<u8>>,
+                    0_i32,
+                    None::<i32>,
                 ],
             )
             .expect("insert alice private message");
@@ -767,8 +776,15 @@ fn create_sender_account(root: &Path) {
                     table = TABLE_GROUP_SENDER
                 ),
                 params![
-                    200_i64, 4001_i64, 1_i64, 1_i64, 1_700_000_101_i64,
-                    b"alice says hello in group" as &[u8], None::<Vec<u8>>, 0_i32, None::<i32>,
+                    200_i64,
+                    4001_i64,
+                    1_i64,
+                    1_i64,
+                    1_700_000_101_i64,
+                    b"alice says hello in group" as &[u8],
+                    None::<Vec<u8>>,
+                    0_i32,
+                    None::<i32>,
                 ],
             )
             .expect("insert alice group message");
@@ -780,8 +796,15 @@ fn create_sender_account(root: &Path) {
                     table = TABLE_GROUP_SENDER
                 ),
                 params![
-                    210_i64, 4002_i64, 1_i64, 5_i64, 1_700_000_102_i64,
-                    b"spam content" as &[u8], None::<Vec<u8>>, 0_i32, None::<i32>,
+                    210_i64,
+                    4002_i64,
+                    1_i64,
+                    5_i64,
+                    1_700_000_102_i64,
+                    b"spam content" as &[u8],
+                    None::<Vec<u8>>,
+                    0_i32,
+                    None::<i32>,
                 ],
             )
             .expect("insert spam group message");
@@ -795,10 +818,15 @@ fn create_sender_account(root: &Path) {
                     table = TABLE_GROUP_SENDER
                 ),
                 params![
-                    220_i64, 4003_i64,
+                    220_i64,
+                    4003_i64,
                     quote_local_type,
-                    1_i64, 1_700_000_103_i64,
-                    quote_xml.as_bytes(), None::<Vec<u8>>, 0_i32, None::<i32>,
+                    1_i64,
+                    1_700_000_103_i64,
+                    quote_xml.as_bytes(),
+                    None::<Vec<u8>>,
+                    0_i32,
+                    None::<i32>,
                 ],
             )
             .expect("insert quote message");
@@ -814,22 +842,38 @@ fn sender_hiding_filters_hidden_sender_messages_in_group() {
     let result = run_json(
         fixture.path(),
         &[
-            "query", TALKER_GROUP,
-            "--data-dir", senders_dir.as_str(),
-            "--key", TEST_KEY_HEX,
-            "--format", "json",
+            "query",
+            TALKER_GROUP,
+            "--data-dir",
+            senders_dir.as_str(),
+            "--key",
+            TEST_KEY_HEX,
+            "--format",
+            "json",
         ],
     );
     let items = result["items"].as_array().expect("query items array");
 
     // spam message (server_id=4002) should be filtered out
-    let senders: Vec<&str> = items.iter().map(|i| i["sender"].as_str().unwrap()).collect();
-    assert!(!senders.contains(&TALKER_SPAM), "hidden sender message should be filtered: {result}");
-    assert!(senders.contains(&TALKER_ALICE), "visible sender should remain: {result}");
+    let senders: Vec<&str> = items
+        .iter()
+        .map(|i| i["sender"].as_str().unwrap())
+        .collect();
+    assert!(
+        !senders.contains(&TALKER_SPAM),
+        "hidden sender message should be filtered: {result}"
+    );
+    assert!(
+        senders.contains(&TALKER_ALICE),
+        "visible sender should remain: {result}"
+    );
 
     // paging.total should NOT change (DB-level count)
     // paging.returned should reflect filtered items
-    assert_eq!(result["paging"]["returned"].as_u64().unwrap(), items.len() as u64);
+    assert_eq!(
+        result["paging"]["returned"].as_u64().unwrap(),
+        items.len() as u64
+    );
 }
 
 #[test]
@@ -841,14 +885,22 @@ fn sender_hiding_does_not_affect_private_chat() {
     let result = run_json(
         fixture.path(),
         &[
-            "query", TALKER_ALICE,
-            "--data-dir", senders_dir.as_str(),
-            "--key", TEST_KEY_HEX,
-            "--format", "json",
+            "query",
+            TALKER_ALICE,
+            "--data-dir",
+            senders_dir.as_str(),
+            "--key",
+            TEST_KEY_HEX,
+            "--format",
+            "json",
         ],
     );
     let items = result["items"].as_array().expect("query items array");
-    assert_eq!(items.len(), 1, "private chat should not be filtered: {result}");
+    assert_eq!(
+        items.len(),
+        1,
+        "private chat should not be filtered: {result}"
+    );
 }
 
 #[test]
@@ -859,27 +911,51 @@ fn sender_hiding_redacts_quote_referring_hidden_sender() {
     let result = run_json(
         fixture.path(),
         &[
-            "query", TALKER_GROUP,
-            "--data-dir", senders_dir.as_str(),
-            "--key", TEST_KEY_HEX,
-            "--format", "json",
+            "query",
+            TALKER_GROUP,
+            "--data-dir",
+            senders_dir.as_str(),
+            "--key",
+            TEST_KEY_HEX,
+            "--format",
+            "json",
         ],
     );
     let items = result["items"].as_array().expect("query items array");
 
     // Find the quote message (server_id=4003)
     let quote = items.iter().find(|i| i["server_id"].as_i64() == Some(4003));
-    assert!(quote.is_some(), "quote message should be present (alice's reply): items={:?}", items.iter().map(|i| i["server_id"].as_i64()).collect::<Vec<_>>());
+    assert!(
+        quote.is_some(),
+        "quote message should be present (alice's reply): items={:?}",
+        items
+            .iter()
+            .map(|i| i["server_id"].as_i64())
+            .collect::<Vec<_>>()
+    );
     let quote = quote.unwrap();
 
     // refer_sender and refer_content should be null (redacted)
     let q = &quote["content"]["Quote"];
-    assert!(q["refer_sender"].is_null(), "refer_sender should be redacted: {quote}");
-    assert!(q["refer_content"].is_null(), "refer_content should be redacted: {quote}");
+    assert!(
+        q["refer_sender"].is_null(),
+        "refer_sender should be redacted: {quote}"
+    );
+    assert!(
+        q["refer_content"].is_null(),
+        "refer_content should be redacted: {quote}"
+    );
     // reply_text should be preserved
-    assert!(q["reply_text"].as_str().unwrap().contains("my reply"), "reply_text should be preserved: {quote}");
+    assert!(
+        q["reply_text"].as_str().unwrap().contains("my reply"),
+        "reply_text should be preserved: {quote}"
+    );
     // raw_xml should be cleared
-    assert_eq!(q["raw_xml"].as_str(), Some(""), "raw_xml should be empty: {quote}");
+    assert_eq!(
+        q["raw_xml"].as_str(),
+        Some(""),
+        "raw_xml should be empty: {quote}"
+    );
 }
 
 #[test]
@@ -890,19 +966,33 @@ fn sender_hiding_show_hidden_restores_all_messages_and_quotes() {
     let result = run_json(
         fixture.path(),
         &[
-            "query", TALKER_GROUP,
-            "--data-dir", senders_dir.as_str(),
-            "--key", TEST_KEY_HEX,
+            "query",
+            TALKER_GROUP,
+            "--data-dir",
+            senders_dir.as_str(),
+            "--key",
+            TEST_KEY_HEX,
             "--show-hidden",
-            "--format", "json",
+            "--format",
+            "json",
         ],
     );
     let items = result["items"].as_array().expect("query items array");
-    assert_eq!(items.len(), 3, "show_hidden should restore all 3 messages: {result}");
+    assert_eq!(
+        items.len(),
+        3,
+        "show_hidden should restore all 3 messages: {result}"
+    );
 
     // Quote should have refer_sender intact
-    let quote = items.iter().find(|i| i["server_id"].as_i64() == Some(4003)).unwrap();
-    assert!(!quote["content"]["Quote"]["refer_sender"].is_null(), "refer_sender should be intact with show_hidden: {quote}");
+    let quote = items
+        .iter()
+        .find(|i| i["server_id"].as_i64() == Some(4003))
+        .unwrap();
+    assert!(
+        !quote["content"]["Quote"]["refer_sender"].is_null(),
+        "refer_sender should be intact with show_hidden: {quote}"
+    );
 }
 
 #[test]
@@ -914,22 +1004,37 @@ fn sender_hiding_session_placeholder_when_last_sender_hidden() {
         fixture.path(),
         &[
             "sessions",
-            "--data-dir", senders_dir.as_str(),
-            "--key", TEST_KEY_HEX,
-            "--format", "json",
+            "--data-dir",
+            senders_dir.as_str(),
+            "--key",
+            TEST_KEY_HEX,
+            "--format",
+            "json",
         ],
     );
     let items = sessions["items"].as_array().expect("sessions items array");
 
-    let group_session = items.iter().find(|i| i["username"].as_str() == Some(TALKER_GROUP));
-    assert!(group_session.is_some(), "group session should be visible: {sessions}");
+    let group_session = items
+        .iter()
+        .find(|i| i["username"].as_str() == Some(TALKER_GROUP));
+    assert!(
+        group_session.is_some(),
+        "group session should be visible: {sessions}"
+    );
     let group_session = group_session.unwrap();
 
     // Summary should be placeholder, sender fields should be null
-    assert_eq!(group_session["summary"].as_str(), Some("[消息已隐藏]"),
-        "summary should be placeholder: {group_session}");
-    assert!(group_session["last_msg_sender"].is_null(),
-        "last_msg_sender should be null: {group_session}");
-    assert!(group_session["direction"].is_null(),
-        "direction should be null: {group_session}");
+    assert_eq!(
+        group_session["summary"].as_str(),
+        Some("[消息已隐藏]"),
+        "summary should be placeholder: {group_session}"
+    );
+    assert!(
+        group_session["last_msg_sender"].is_null(),
+        "last_msg_sender should be null: {group_session}"
+    );
+    assert!(
+        group_session["direction"].is_null(),
+        "direction should be null: {group_session}"
+    );
 }

@@ -74,17 +74,15 @@ pub fn cmd_decrypt(
             KeyMaterial::EncKey { key, salt } => {
                 wx_decrypt::decrypt_db_direct(db_path, &out_path, key, salt, params)
             }
-            KeyMaterial::EncKeys(pairs) => {
-                match wx_decrypt::read_main_db_salt_for_path(db_path) {
-                    Ok(db_salt) => match pairs.iter().find(|p| p.salt == db_salt) {
-                        Some(pair) => wx_decrypt::decrypt_db_direct(
-                            db_path, &out_path, &pair.key, &pair.salt, params,
-                        ),
-                        None => Err(wx_decrypt::DecryptError::NoMatchingEncKey),
-                    },
-                    Err(e) => Err(e),
-                }
-            }
+            KeyMaterial::EncKeys(pairs) => match wx_decrypt::read_main_db_salt_for_path(db_path) {
+                Ok(db_salt) => match pairs.iter().find(|p| p.salt == db_salt) {
+                    Some(pair) => wx_decrypt::decrypt_db_direct(
+                        db_path, &out_path, &pair.key, &pair.salt, params,
+                    ),
+                    None => Err(wx_decrypt::DecryptError::NoMatchingEncKey),
+                },
+                Err(e) => Err(e),
+            },
         };
 
         match db_result {
@@ -98,9 +96,9 @@ pub fn cmd_decrypt(
                         KeyMaterial::RawKey(key) => {
                             wx_decrypt::decrypt_wal(&wal_path, &out_path, key, params)
                         }
-                        KeyMaterial::EncKey { key, salt } => wx_decrypt::decrypt_wal_direct(
-                            &wal_path, &out_path, key, salt, params,
-                        ),
+                        KeyMaterial::EncKey { key, salt } => {
+                            wx_decrypt::decrypt_wal_direct(&wal_path, &out_path, key, salt, params)
+                        }
                         KeyMaterial::EncKeys(pairs) => {
                             match wx_decrypt::read_main_db_salt_for_path(&wal_path) {
                                 Ok(db_salt) => match pairs.iter().find(|p| p.salt == db_salt) {

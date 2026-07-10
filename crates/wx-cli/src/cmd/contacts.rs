@@ -6,7 +6,9 @@ use wx_db::Contact;
 use super::thin_client::{ThinClientCliArgs, ThinClientOptions};
 use crate::output::JsonEnvelope;
 use crate::settings::Settings;
-use crate::util::{effective_limit_all, open_db_core, print_cache_stats, print_detection_note, try_remote_or_local};
+use crate::util::{
+    effective_limit_all, open_db_core, print_cache_stats, print_detection_note, try_remote_or_local,
+};
 use crate::visibility_projection::project_contacts_envelope;
 use crate::OutputFormat;
 

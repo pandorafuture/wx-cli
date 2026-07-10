@@ -197,15 +197,20 @@ mod tests {
     #[test]
     fn watch_text_hidden_sender_shows_placeholder() {
         use crate::schema::project_session_sender;
-        let visibility = VisibilityIndex::build(
-            &["wxid_spam".to_string()], &[], &ContactResolver::empty(),
-        );
+        let visibility =
+            VisibilityIndex::build(&["wxid_spam".to_string()], &[], &ContactResolver::empty());
         let mut enriched = make_enriched_session("group@chatroom", "spam msg", Some("wxid_spam"));
         project_session_sender(&mut enriched, &visibility);
 
         let line = format_watch_line_from_enriched(&enriched, &ContactResolver::empty(), "wxid_me");
-        assert!(line.contains("[消息已隐藏]"), "should show placeholder: {line}");
-        assert!(!line.contains("wxid_spam"), "should not leak sender wxid: {line}");
+        assert!(
+            line.contains("[消息已隐藏]"),
+            "should show placeholder: {line}"
+        );
+        assert!(
+            !line.contains("wxid_spam"),
+            "should not leak sender wxid: {line}"
+        );
     }
 
     #[test]
@@ -281,6 +286,7 @@ fn should_emit_event(
     show_hidden || !visibility.is_hidden_talker(&event.username)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn cmd_watch(
     key_hex: Option<String>,
     data_dir: Option<PathBuf>,

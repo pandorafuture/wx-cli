@@ -23,10 +23,7 @@ struct BridgeState {
     startup_watermark: i64,
 }
 
-fn should_broadcast_talker(
-    visibility: &wx_context::VisibilityIndex,
-    talker: &str,
-) -> bool {
+fn should_broadcast_talker(visibility: &wx_context::VisibilityIndex, talker: &str) -> bool {
     !visibility.is_hidden_talker(talker)
 }
 
@@ -407,25 +404,40 @@ mod tests {
 
     #[test]
     fn enrich_messages_filters_hidden_sender_in_group() {
-        let visibility = VisibilityIndex::build(
-            &["wxid_spam".to_string()],
-            &[],
-            &ContactResolver::empty(),
-        );
+        let visibility =
+            VisibilityIndex::build(&["wxid_spam".to_string()], &[], &ContactResolver::empty());
         let msgs = vec![
             wx_db::Message {
-                sort_seq: 1, server_id: 1, msg_type: 1, sub_type: 0,
-                sender: "wxid_spam".to_string(), talker: "group@chatroom".to_string(),
-                create_time: 100, content: wx_db::MessageContent::Text("spam".into()), status: 0,
+                sort_seq: 1,
+                server_id: 1,
+                msg_type: 1,
+                sub_type: 0,
+                sender: "wxid_spam".to_string(),
+                talker: "group@chatroom".to_string(),
+                create_time: 100,
+                content: wx_db::MessageContent::Text("spam".into()),
+                status: 0,
             },
             wx_db::Message {
-                sort_seq: 2, server_id: 2, msg_type: 1, sub_type: 0,
-                sender: "wxid_normal".to_string(), talker: "group@chatroom".to_string(),
-                create_time: 101, content: wx_db::MessageContent::Text("hello".into()), status: 0,
+                sort_seq: 2,
+                server_id: 2,
+                msg_type: 1,
+                sub_type: 0,
+                sender: "wxid_normal".to_string(),
+                talker: "group@chatroom".to_string(),
+                create_time: 101,
+                content: wx_db::MessageContent::Text("hello".into()),
+                status: 0,
             },
         ];
 
-        let result = enrich_messages(msgs, "wxid_me", &ContactResolver::empty(), "group@chatroom", &visibility);
+        let result = enrich_messages(
+            msgs,
+            "wxid_me",
+            &ContactResolver::empty(),
+            "group@chatroom",
+            &visibility,
+        );
         assert_eq!(result.len(), 1, "hidden sender message should be filtered");
         assert_eq!(result[0].message.sender, "wxid_normal");
     }
@@ -433,11 +445,8 @@ mod tests {
     #[test]
     fn session_sender_redaction_in_bridge() {
         use crate::schema::project_session_sender;
-        let visibility = VisibilityIndex::build(
-            &["wxid_spam".to_string()],
-            &[],
-            &ContactResolver::empty(),
-        );
+        let visibility =
+            VisibilityIndex::build(&["wxid_spam".to_string()], &[], &ContactResolver::empty());
         let ev = wx_monitor::SessionEvent {
             username: "group@chatroom".to_string(),
             sort_timestamp: 1,
@@ -448,7 +457,8 @@ mod tests {
             last_msg_sender: Some("wxid_spam".to_string()),
             last_sender_display_name: Some("Spammer".to_string()),
         };
-        let mut enriched = crate::schema::enrich_session_event(ev, "wxid_me", &ContactResolver::empty());
+        let mut enriched =
+            crate::schema::enrich_session_event(ev, "wxid_me", &ContactResolver::empty());
         project_session_sender(&mut enriched, &visibility);
 
         assert_eq!(enriched.session.summary, "[消息已隐藏]");

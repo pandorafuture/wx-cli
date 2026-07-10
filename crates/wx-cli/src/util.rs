@@ -3,6 +3,12 @@ use std::path::PathBuf;
 use crate::cmd::thin_client::{ThinClient, ThinClientError, ThinClientOptions};
 use wx_context::{AccountContext, DecryptRequest, DecryptStats, PersistentCache};
 
+type OpenDbAllResult = (
+    wx_db::WechatDb,
+    Option<PersistentCache>,
+    Option<DecryptStats>,
+);
+
 /// Open a WechatDb: direct encrypted open if raw_key available, else decrypt+cache (core only).
 pub fn open_db_core(
     acct: &AccountContext,
@@ -27,14 +33,7 @@ pub fn open_db_core(
 pub fn open_db_all(
     acct: &AccountContext,
     progress: impl Fn(wx_context::DecryptProgress) + Send + Sync,
-) -> Result<
-    (
-        wx_db::WechatDb,
-        Option<PersistentCache>,
-        Option<DecryptStats>,
-    ),
-    Box<dyn std::error::Error>,
-> {
+) -> Result<OpenDbAllResult, Box<dyn std::error::Error>> {
     if acct.raw_key.is_some() {
         eprintln!("Direct encrypted open (SQLCipher)");
         let db = wx_context::open_encrypted_db(acct)?;
@@ -249,14 +248,8 @@ mod tests {
 
     #[test]
     fn effective_limit_all_true_returns_max() {
-        assert_eq!(
-            effective_limit_all(true, 0),
-            wx_db::MAX_QUERY_LIMIT
-        );
-        assert_eq!(
-            effective_limit_all(true, 50),
-            wx_db::MAX_QUERY_LIMIT
-        );
+        assert_eq!(effective_limit_all(true, 0), wx_db::MAX_QUERY_LIMIT);
+        assert_eq!(effective_limit_all(true, 50), wx_db::MAX_QUERY_LIMIT);
     }
 
     #[test]

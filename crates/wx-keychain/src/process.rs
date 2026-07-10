@@ -138,16 +138,16 @@ fn get_wechat_version() -> Result<String, KeychainError> {
 
 /// Shared config directory resolved by `AppPaths`.
 pub fn config_dir() -> Result<PathBuf, KeychainError> {
-    let ap = wx_paths::AppPaths::new()
-        .map_err(|e| KeychainError::Other(e.to_string()))?;
+    let ap = wx_paths::AppPaths::new().map_err(|e| KeychainError::Other(e.to_string()))?;
     Ok(ap.config_dir())
 }
 
 /// Default xwechat_files base path.
 fn default_xwechat_files_base() -> Result<PathBuf, KeychainError> {
-    let ap = wx_paths::AppPaths::new()
-        .map_err(|e| KeychainError::Other(e.to_string()))?;
-    Ok(ap.home().join("Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files"))
+    let ap = wx_paths::AppPaths::new().map_err(|e| KeychainError::Other(e.to_string()))?;
+    Ok(ap
+        .home()
+        .join("Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files"))
 }
 
 /// Detect account directories from the filesystem (without WeChat running).
@@ -349,7 +349,6 @@ fn tiebreak_by_wal_mtime<'a>(accounts: &[&'a AccountDirInfo]) -> Option<&'a Acco
 
     best
 }
-
 
 #[cfg(test)]
 mod tests {

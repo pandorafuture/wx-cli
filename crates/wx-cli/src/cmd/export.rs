@@ -7,9 +7,9 @@ use wx_context::{
 };
 use wx_db::{is_group_chat, MessageContent, MessageQuery, SortOrder, MAX_QUERY_LIMIT};
 
+use crate::cmd::contacts::build_visibility;
 use crate::cmd::export_media::{MediaKind, MediaStats};
 use crate::cmd::query::resolve_talker;
-use crate::cmd::contacts::build_visibility;
 use crate::output::{JsonEnvelope, PagingMeta, StatsMeta};
 use crate::schema::{enrich_message, project_message_items, EnrichedMessage};
 use crate::util::{
@@ -247,10 +247,9 @@ pub fn cmd_export(
     }
 
     // Resolve media via parallel pipeline (or skip)
-    let (media_map, media_stats, _media_errors) = if no_media || cache.is_none() {
+    let (media_map, media_stats, _media_errors) = if no_media {
         (vec![vec![]; projected.len()], MediaStats::default(), None)
-    } else {
-        let c = cache.as_ref().unwrap();
+    } else if let Some(c) = cache.as_ref() {
         let attach_dir = acct.data_dir.join("msg").join("attach");
         let decrypted_media = c.decrypted_root().join("message");
         let hardlink_db = c.decrypted_root().join("hardlink").join("hardlink.db");
@@ -294,6 +293,8 @@ pub fn cmd_export(
         };
         combined.print_report();
         (media_map, stats, Some(combined))
+    } else {
+        (vec![vec![]; projected.len()], MediaStats::default(), None)
     };
 
     let total_media: usize = media_map.iter().map(Vec::len).sum();

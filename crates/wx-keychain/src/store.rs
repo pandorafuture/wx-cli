@@ -57,15 +57,13 @@ pub struct KeyStore {
 impl KeyStore {
     /// Default path: `<config_dir>/keys.toml`
     pub fn default_path() -> Result<PathBuf, KeychainError> {
-        let ap = wx_paths::AppPaths::new()
-            .map_err(|e| KeychainError::Other(e.to_string()))?;
+        let ap = wx_paths::AppPaths::new().map_err(|e| KeychainError::Other(e.to_string()))?;
         Ok(ap.keys_file())
     }
 
     /// Load from the default path, creating an empty store if the file doesn't exist.
     pub fn load_default() -> Result<Self, KeychainError> {
-        let ap = wx_paths::AppPaths::new()
-            .map_err(|e| KeychainError::Other(e.to_string()))?;
+        let ap = wx_paths::AppPaths::new().map_err(|e| KeychainError::Other(e.to_string()))?;
         ap.migrate_config()
             .map_err(|e| KeychainError::Other(format!("config migration failed: {}", e)))?;
         let path = ap.keys_file();
@@ -353,7 +351,6 @@ impl KeyStore {
         self.accounts.get(account_id)
     }
 }
-
 
 #[cfg(test)]
 mod tests {
