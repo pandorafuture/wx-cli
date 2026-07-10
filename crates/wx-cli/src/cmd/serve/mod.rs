@@ -19,8 +19,8 @@ use tokio::signal::unix::SignalKind;
 use tokio::sync::{broadcast, mpsc, watch};
 use tokio_util::sync::CancellationToken;
 use wx_context::{
-    open_fts_connection_with_key, register_mm_fts_tokenizer, write_shard_metadata_sidecar,
-    AccountContext, ContactResolver, DecryptRequest, PersistentCache, ResolveParams,
+    register_mm_fts_tokenizer, write_shard_metadata_sidecar, AccountContext, ContactResolver,
+    DecryptRequest, PersistentCache, ResolveParams,
 };
 
 use crate::util::{print_cache_stats, print_detection_note};
@@ -122,7 +122,10 @@ pub async fn cmd_serve(
 
     // 3b. Open independent FTS connection (outside WechatDb Mutex)
     let fts_conn = db.message_fts_path.as_deref().and_then(|fts_path| {
-        match open_fts_connection_with_key(fts_path, acct.raw_key.as_ref()) {
+        match db.open_related_readonly(fts_path).and_then(|conn| {
+            register_mm_fts_tokenizer(&conn).map_err(wx_db::DbError::FtsInit)?;
+            Ok(conn)
+        }) {
             Ok(conn) => {
                 if let Ok(mode) =
                     conn.query_row("PRAGMA journal_mode", [], |r| r.get::<_, String>(0))
@@ -196,7 +199,7 @@ pub async fn cmd_serve(
 
     // 3c. Open hardlink.db connection (pooled, outside WechatDb Mutex)
     let hardlink_db_conn = if hardlink_db_path.exists() {
-        match wx_db::open_readonly_connection(&hardlink_db_path, acct.raw_key.as_ref()) {
+        match db.open_related_readonly(&hardlink_db_path) {
             Ok(conn) => {
                 eprintln!("server/hardlink: opened pooled connection");
                 Some(conn)
@@ -222,9 +225,14 @@ pub async fn cmd_serve(
     }
 
     let watch_mode = resolve_watch_mode(poll, fsnotify);
+    let monitor_derived_keys = wx_context::persisted_derived_keys(&acct)?;
     let config = wx_monitor::MonitorConfig {
         encrypted_session_dir,
-        key_material: acct.key_material.clone(),
+        key_material: if monitor_derived_keys.is_empty() {
+            acct.key_material.clone()
+        } else {
+            wx_decrypt::KeyMaterial::EncKeys(monitor_derived_keys)
+        },
         params,
         watch_mode: watch_mode.clone(),
         poll_interval: Duration::from_millis(poll_ms),
@@ -239,7 +247,6 @@ pub async fn cmd_serve(
 
     // Capture values before moving db into Mutex
     let fts_path_for_refresh = db.message_fts_path.clone();
-    let raw_key_for_refresh = acct.raw_key;
 
     // 5. Create refresh task channels
     let (refresh_tx, refresh_rx) = mpsc::channel::<RefreshTrigger>(64);
@@ -398,7 +405,6 @@ pub async fn cmd_serve(
             shutdown_bg.clone(),
         )
         .with_fts(bg_state.fts_conn.clone(), fts_path_for_refresh)
-        .with_raw_key(raw_key_for_refresh)
         .with_caches(
             Some(Arc::clone(&bg_state.name2id_cache)),
             Some(Arc::clone(&bg_state.media_db_paths)),

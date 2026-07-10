@@ -77,24 +77,23 @@ pub fn cmd_query(
 
     if options.is_enabled() && !preserve_local_warning {
         let client = ThinClient::new(options.clone());
-        match client.probe_health().and_then(|_| {
-            fetch_remote_query(
-                &client,
-                contact,
-                since,
-                until,
-                msg_type.clone(),
-                effective_limit,
-                offset,
-                order.clone(),
-                around_sort_seq,
-                around_server_id,
-                context,
-                after_sort_seq,
-                show_hidden,
-            )
-        }) {
-            Ok(envelope) => {
+        match client.probe_health() {
+            Ok(()) => {
+                let envelope = fetch_remote_query(
+                    &client,
+                    contact,
+                    since,
+                    until,
+                    msg_type.clone(),
+                    effective_limit,
+                    offset,
+                    order.clone(),
+                    around_sort_seq,
+                    around_server_id,
+                    context,
+                    after_sort_seq,
+                    show_hidden,
+                )?;
                 let is_group = envelope
                     .items
                     .first()

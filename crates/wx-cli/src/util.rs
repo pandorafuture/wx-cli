@@ -10,7 +10,7 @@ pub fn open_db_core(
 ) -> Result<(wx_db::WechatDb, Option<DecryptStats>), Box<dyn std::error::Error>> {
     if acct.raw_key.is_some() {
         eprintln!("Direct encrypted open (SQLCipher)");
-        let db = wx_context::open_encrypted_db(acct)?;
+        let db = wx_context::open_encrypted_db_core(acct)?;
         Ok((db, None))
     } else {
         let params = &wx_decrypt::MACOS_4_1_7_31;
@@ -18,7 +18,7 @@ pub fn open_db_core(
         let stats = DecryptRequest::new()
             .core()
             .execute_with_progress(&cache, progress)?;
-        let db = wx_db::WechatDb::open(cache.decrypted_root())?;
+        let db = wx_db::WechatDb::open_core(cache.decrypted_root())?;
         Ok((db, Some(stats)))
     }
 }
@@ -139,9 +139,10 @@ pub fn effective_limit_all(all: bool, limit: usize) -> usize {
     }
 }
 
-/// Attempt a remote API call via ThinClient; on connection/auth failure fall back to the
-/// local path.  This encapsulates the `probe_health → remote_fn → should_fallback → local_fn`
-/// pattern shared by `search`, `contacts`, and `sessions`.
+/// Attempt a remote API call via ThinClient. In auto mode, fall back locally only when
+/// the initial health probe cannot reach/authenticate with a usable server. Once health
+/// succeeds, a failed business request is returned to the caller instead of launching an
+/// expensive local SQLCipher query after waiting for the remote timeout.
 pub fn try_remote_or_local<T>(
     options: &ThinClientOptions,
     remote_fn: impl FnOnce(&ThinClient) -> Result<T, ThinClientError>,
@@ -150,8 +151,8 @@ pub fn try_remote_or_local<T>(
 ) -> Result<T, Box<dyn std::error::Error>> {
     if options.is_enabled() {
         let client = ThinClient::new(options.clone());
-        match client.probe_health().and_then(|_| remote_fn(&client)) {
-            Ok(result) => return Ok(result),
+        match client.probe_health() {
+            Ok(()) => return remote_fn(&client).map_err(Into::into),
             Err(err) if err.should_fallback(options.mode) => {
                 eprintln!(
                     "note: remote server unavailable, falling back to local {label} ({})",

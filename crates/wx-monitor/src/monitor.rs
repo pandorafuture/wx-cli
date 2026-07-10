@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use futures_core::Stream;
 use wx_db::{SessionQuery, WechatDb};
-use wx_decrypt::{CryptoParams, KeyMaterial};
+use wx_decrypt::{CryptoParams, EncKeyPair, KeyMaterial};
 
 use crate::cache::{DecryptCache, UpdateKind};
 use crate::error::MonitorError;
@@ -100,7 +100,19 @@ impl WechatMonitor {
         let (db, cache) = if let (Some(raw_key), Some(ref encrypted_root)) =
             (config.raw_key, &config.encrypted_root)
         {
-            let db = WechatDb::open_encrypted(encrypted_root, raw_key)?;
+            let derived_keys: Vec<EncKeyPair> = match &config.key_material {
+                KeyMaterial::EncKeys(pairs) => pairs.clone(),
+                KeyMaterial::EncKey { key, salt } => vec![EncKeyPair {
+                    key: *key,
+                    salt: *salt,
+                }],
+                KeyMaterial::RawKey(_) => Vec::new(),
+            };
+            let db = WechatDb::open_encrypted_core_with_key_cache(
+                encrypted_root,
+                raw_key,
+                &derived_keys,
+            )?;
             (db, None)
         } else {
             let mut cache = DecryptCache::new(
@@ -109,7 +121,7 @@ impl WechatMonitor {
                 config.params,
             )?;
             cache.initial_decrypt()?;
-            let db = WechatDb::open(cache.decrypted_root())?;
+            let db = WechatDb::open_core(cache.decrypted_root())?;
             (db, Some(cache))
         };
 

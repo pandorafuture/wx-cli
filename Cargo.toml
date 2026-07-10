@@ -8,3 +8,18 @@ edition = "2021"
 license = "MIT"
 repository = "https://github.com/pandorafuture/wx-cli"
 description = "WeChat macOS database decryption and query tool"
+
+# PBKDF2 intentionally runs 256k rounds. Keep the crypto crate optimized in
+# dev/test builds so parallel integration tests and local debug binaries do not
+# spend seconds per database deriving SQLCipher keys.
+[profile.dev.package.wx-decrypt]
+opt-level = 3
+
+[profile.dev.package.pbkdf2]
+opt-level = 3
+
+[profile.dev.package.sha2]
+opt-level = 3
+
+[profile.dev.package.hmac]
+opt-level = 3

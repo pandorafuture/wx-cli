@@ -5,7 +5,7 @@ use std::sync::Arc;
 use rusqlite::Connection;
 
 use crate::error::DbError;
-use crate::open::MessageShard;
+use crate::open::{MessageShard, SqlcipherKey};
 
 pub(crate) type FtsInitFn = dyn Fn(&Connection) -> Result<(), String> + Send + Sync;
 
@@ -19,7 +19,7 @@ pub struct ShardPool {
     fts_conn: Option<Connection>,
     fts_path: Option<PathBuf>,
     fts_init: Option<Arc<FtsInitFn>>,
-    raw_key: Option<[u8; 32]>,
+    sqlcipher_key: Option<SqlcipherKey>,
 }
 
 impl std::fmt::Debug for ShardPool {
@@ -41,22 +41,22 @@ impl ShardPool {
         shards: &[MessageShard],
         fts_path: Option<&Path>,
         fts_init: Option<Arc<FtsInitFn>>,
-        raw_key: Option<[u8; 32]>,
+        sqlcipher_key: Option<SqlcipherKey>,
     ) -> Result<Self, DbError> {
         let mut conns = HashMap::with_capacity(shards.len());
         for shard in shards {
-            let conn = crate::open::open_connection(&shard.path, raw_key.as_ref())?;
+            let conn = crate::open::open_connection(&shard.path, sqlcipher_key.as_ref())?;
             conns.insert(shard.path.clone(), conn);
         }
 
         let fts_conn = match (fts_path, &fts_init) {
             (Some(path), Some(init)) => {
-                let conn = crate::open::open_connection(path, raw_key.as_ref())?;
+                let conn = crate::open::open_connection(path, sqlcipher_key.as_ref())?;
                 init(&conn).map_err(DbError::FtsInit)?;
                 Some(conn)
             }
             (Some(path), None) => {
-                let conn = crate::open::open_connection(path, raw_key.as_ref())?;
+                let conn = crate::open::open_connection(path, sqlcipher_key.as_ref())?;
                 Some(conn)
             }
             _ => None,
@@ -67,7 +67,7 @@ impl ShardPool {
             fts_conn,
             fts_path: fts_path.map(|p| p.to_path_buf()),
             fts_init,
-            raw_key,
+            sqlcipher_key,
         })
     }
 
@@ -79,7 +79,7 @@ impl ShardPool {
     /// Close and reopen one shard connection.
     pub fn reopen_shard(&mut self, path: &Path) -> Result<(), DbError> {
         if self.conns.contains_key(path) {
-            let conn = crate::open::open_connection(path, self.raw_key.as_ref())?;
+            let conn = crate::open::open_connection(path, self.sqlcipher_key.as_ref())?;
             self.conns.insert(path.to_path_buf(), conn);
         }
         Ok(())
@@ -93,7 +93,7 @@ impl ShardPool {
     /// Close and reopen the FTS connection, re-registering the tokenizer.
     pub fn reopen_fts(&mut self) -> Result<(), DbError> {
         if let Some(path) = &self.fts_path {
-            let conn = crate::open::open_connection(path, self.raw_key.as_ref())?;
+            let conn = crate::open::open_connection(path, self.sqlcipher_key.as_ref())?;
             if let Some(init) = &self.fts_init {
                 init(&conn).map_err(DbError::FtsInit)?;
             }
@@ -106,7 +106,7 @@ impl ShardPool {
     pub fn reopen_all(&mut self) -> Result<(), DbError> {
         let paths: Vec<PathBuf> = self.conns.keys().cloned().collect();
         for path in paths {
-            let conn = crate::open::open_connection(&path, self.raw_key.as_ref())?;
+            let conn = crate::open::open_connection(&path, self.sqlcipher_key.as_ref())?;
             self.conns.insert(path, conn);
         }
         self.reopen_fts()?;

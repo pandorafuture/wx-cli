@@ -12,7 +12,7 @@ use crate::model::{
     effective_limit, split_local_type, AnchorMode, Message, MessageQuery, MessageQueryResult,
     QueryStats, SortOrder,
 };
-use crate::open::{MessageShard, WechatDb};
+use crate::open::{MessageShard, SqlcipherKey, WechatDb};
 
 /// Dispatch mode for regular (non-anchor) queries.
 enum RegularQueryMode {
@@ -56,13 +56,13 @@ fn prepare_shard_query<'a>(
     table_name: &str,
     warnings: &mut Vec<ShardWarning>,
     pooled_conn: Option<&'a Connection>,
-    raw_key: Option<&[u8; 32]>,
+    sqlcipher_key: Option<&SqlcipherKey>,
 ) -> Option<PreparedShard<'a>> {
     let shard_path = shard.path.display().to_string();
 
     let conn = match pooled_conn {
         Some(conn) => ShardConnection::Borrowed(conn),
-        None => match WechatDb::open_shard_with_key(shard, raw_key) {
+        None => match WechatDb::open_shard_with_key(shard, sqlcipher_key) {
             Ok(c) => ShardConnection::Owned(c),
             Err(e) => {
                 warnings.push(ShardWarning {
@@ -176,7 +176,7 @@ impl WechatDb {
                 &table_name,
                 &mut shard_warnings,
                 self.pool().and_then(|pool| pool.get(&shard.path)),
-                self.raw_key.as_ref(),
+                self.sqlcipher_key.as_ref(),
             ) {
                 Some(p) => p,
                 None => continue,
@@ -296,12 +296,12 @@ impl WechatDb {
         for shard in &shards {
             let count = if let Some(pool) = self.pool() {
                 if let Some(conn) = pool.get(&shard.path) {
-                    Self::count_shard(&conn, &sql, start_time, end_time, msg_type_filter)
+                    Self::count_shard(conn, &sql, start_time, end_time, msg_type_filter)
                 } else {
                     continue;
                 }
             } else {
-                match crate::open::open_connection(&shard.path, self.raw_key.as_ref()) {
+                match crate::open::open_connection(&shard.path, self.sqlcipher_key.as_ref()) {
                     Ok(conn) => {
                         Self::count_shard(&conn, &sql, start_time, end_time, msg_type_filter)
                     }
@@ -385,7 +385,7 @@ impl WechatDb {
                 table_name,
                 &mut shard_warnings,
                 self.pool().and_then(|pool| pool.get(&shard.path)),
-                self.raw_key.as_ref(),
+                self.sqlcipher_key.as_ref(),
             ) {
                 Some(p) => p,
                 None => continue,
@@ -476,7 +476,7 @@ impl WechatDb {
                 table_name,
                 &mut shard_warnings,
                 self.pool().and_then(|pool| pool.get(&shard.path)),
-                self.raw_key.as_ref(),
+                self.sqlcipher_key.as_ref(),
             ) {
                 Some(p) => p,
                 None => continue,
@@ -607,7 +607,7 @@ impl WechatDb {
                 table_name,
                 &mut shard_warnings,
                 self.pool().and_then(|pool| pool.get(&shard.path)),
-                self.raw_key.as_ref(),
+                self.sqlcipher_key.as_ref(),
             ) {
                 Some(p) => p,
                 None => continue,
@@ -683,7 +683,7 @@ impl WechatDb {
                 table_name,
                 &mut shard_warnings,
                 self.pool().and_then(|pool| pool.get(&shard.path)),
-                self.raw_key.as_ref(),
+                self.sqlcipher_key.as_ref(),
             ) {
                 Some(p) => p,
                 None => continue,
@@ -812,16 +812,21 @@ impl WechatDb {
             known_usernames.iter().map(|u| (u.clone(), 0)).collect();
 
         for shard in self.all_shards() {
-            let conn = match WechatDb::open_shard_with_key(shard, self.raw_key.as_ref()) {
-                Ok(c) => c,
-                Err(e) => {
-                    eprintln!(
-                        "warn: bulk_max_sort_seq: open shard {} failed: {e}",
-                        shard.path.display()
-                    );
-                    continue;
+            let conn = if let Some(conn) = self.pool().and_then(|pool| pool.get(&shard.path)) {
+                ShardConnection::Borrowed(conn)
+            } else {
+                match WechatDb::open_shard_with_key(shard, self.sqlcipher_key.as_ref()) {
+                    Ok(conn) => ShardConnection::Owned(conn),
+                    Err(e) => {
+                        eprintln!(
+                            "warn: bulk_max_sort_seq: open shard {} failed: {e}",
+                            shard.path.display()
+                        );
+                        continue;
+                    }
                 }
             };
+            let conn = conn.as_conn();
 
             // Discover Msg_* tables in this shard
             let mut stmt = match conn

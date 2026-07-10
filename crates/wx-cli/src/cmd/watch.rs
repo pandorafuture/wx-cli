@@ -318,9 +318,14 @@ pub async fn cmd_watch(
     }
 
     let watch_mode = resolve_watch_mode(poll, fsnotify);
+    let monitor_derived_keys = wx_context::persisted_derived_keys(&acct)?;
     let config = wx_monitor::MonitorConfig {
         encrypted_session_dir,
-        key_material: acct.key_material.clone(),
+        key_material: if monitor_derived_keys.is_empty() {
+            acct.key_material.clone()
+        } else {
+            wx_decrypt::KeyMaterial::EncKeys(monitor_derived_keys)
+        },
         params,
         watch_mode: watch_mode.clone(),
         poll_interval: Duration::from_millis(poll_ms),
