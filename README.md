@@ -1,6 +1,39 @@
 # wx-cli
 
-WeChat macOS 数据库解密与查询工具。支持通过 `key extract`（LLDB hook）提取密钥，解密并查询 WeChat 4.1.7.x / 4.1.8.x 的 Apple SEE 加密 SQLite 数据库。
+> 把微信变成 Agent 能读取、能搜索、能实时订阅的数据源。
+
+wx-cli 直接读取 Mac 上的微信本地数据，让你和 Agent 都能访问自己的聊天记录、联系人、群聊和媒体消息。数据默认留在本机，不需要上传聊天数据库，也不依赖云端导出。
+
+## 它能做什么
+
+- **读取微信本地数据库**：按联系人、群聊、时间范围和消息类型查询历史消息。
+- **搜索全部聊天记录**：从所有会话中查关键词，快速找回客户需求、承诺、文件和讨论结论。
+- **一次读取跨会话时间线**：按时间范围取得所有会话的新消息，适合记忆补全、归档和日报任务。
+- **实时订阅新消息**：用命令行持续监听，或通过 SSE 把新消息实时推给 Agent 和其他程序。
+- **导出与处理内容**：把会话导出为 JSON 或文本，并读取图片、语音、视频等媒体内容。
+- **让 Agent 直接使用**：项目自带 Agent Skill，Claude Code、Codex、Cursor 等工具安装后就知道怎样查询和订阅微信。
+- **提供稳定的本地服务**：REST API 可供个人助理、自动化任务、工作流和多个 Agent 共同使用。
+- **保护不想暴露的内容**：可隐藏指定联系人、群聊、标签或群成员，查询和订阅时自动过滤。
+
+## 你可以基于它在微信上做什么
+
+wx-cli 提供了最关键的两样东西：完整的历史上下文，以及持续发生的实时消息。把它接给 Agent 后，你可以基于这个项目在微信上做任何事，例如：
+
+- 给 Agent 建立长期微信记忆，自动维护联系人画像和关系上下文；
+- 从聊天里识别待办、承诺、商机、风险和需要跟进的人；
+- 做个人或团队的微信搜索、知识库、CRM、客服和销售助手；
+- 自动生成日报、周报、客户纪要、对账线索和项目进展；
+- 监听关键词或关键联系人，在重要消息出现时触发提醒和工作流；
+- 结合你已有的 Agent 操作或消息发送能力，实现自动回复、业务办理和端到端协作。
+
+它不是只用来“导出聊天记录”的工具，而是微信之上的 Agent 能力层。
+
+## 为什么对 Agent 友好
+
+- 自带可直接安装的 Skill，不需要每次重新教 Agent 命令和数据格式；
+- 命令行、JSON、REST API 和实时事件订阅覆盖查询与持续运行两类任务；
+- 长驻服务可复用已打开的数据库，适合高频查询和定时记忆任务；
+- 所有能力都以本地数据为中心，便于控制隐私边界。
 
 ## 支持范围
 
@@ -60,10 +93,9 @@ source ~/.zshrc
 wx-cli --version
 ```
 
+### 让 Agent 直接使用
 
-### AI 编程助手集成
-
-本项目提供 [Agent Skill](https://skills.sh)，安装后 Claude Code、Codex、Cursor 等 AI 编程助手可直接协助查询微信数据：
+本项目提供 [Agent Skill](https://skills.sh)。安装后，Claude Code、Codex、Cursor 等 Agent 可以直接理解 wx-cli 的能力，并帮你读取历史消息、搜索聊天和订阅新消息：
 
 ```bash
 npx skills add pandorafuture/wx-cli
@@ -141,7 +173,9 @@ wx-cli server stop                             # 停止
 wx-cli server restart                          # 重启
 ```
 
-REST 端点：`/api/v1/health`、`/api/v1/sessions`、`/api/v1/contacts`、`/api/v1/messages`、`/api/v1/search`、`/api/v1/media`、`/api/v1/events`（SSE）。
+REST 端点：`/api/v1/health`、`/api/v1/sessions`、`/api/v1/contacts`、`/api/v1/messages`、`/api/v1/timeline`、`/api/v1/search`、`/api/v1/media`、`/api/v1/events`（SSE）。
+
+其中 `/api/v1/timeline?since=<unix>&until=<unix>` 可在一次请求中读取时间范围内所有会话的消息，适合 Agent 记忆补全、归档和批处理，避免逐会话反复调用。
 
 所有查询命令加 `--format json` 可获取 JSON 格式输出。
 
