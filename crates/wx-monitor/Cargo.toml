@@ -17,7 +17,7 @@ serde          = { version = "1", features = ["derive"] }
 [dev-dependencies]
 aes      = "0.9"
 cbc      = "0.2"
-hmac     = "0.12"
+hmac     = "0.13"
 sha2     = "0.10"
 pbkdf2   = { version = "0.12", features = ["sha2"] }
 rusqlite = { version = "0.40", features = ["bundled"] }
