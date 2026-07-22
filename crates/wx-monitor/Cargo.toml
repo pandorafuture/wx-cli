@@ -18,7 +18,7 @@ serde          = { version = "1", features = ["derive"] }
 aes      = "0.9"
 cbc      = "0.2"
 hmac     = "0.12"
-sha2     = "0.10"
+sha2     = "0.11"
 pbkdf2   = { version = "0.12", features = ["sha2"] }
 rusqlite = { version = "0.40", features = ["bundled"] }
 tokio    = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
