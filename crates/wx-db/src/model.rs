@@ -380,6 +380,9 @@ pub struct Contact {
     pub phone: Option<String>,
     /// Resolved label names from extra_buffer + contact_label table.
     pub labels: Vec<String>,
+    /// Preferred avatar URL from `small_head_url`, falling back to `big_head_url`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub avatar_url: Option<String>,
 }
 
 /// A WeChat chatroom (group chat) entry with its member list.

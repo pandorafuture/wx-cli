@@ -263,6 +263,8 @@ wx-cli server status / stop / restart                      # 管理服务
 | `GET /api/v1/search` | 全文搜索 | `q`（必填）, `limit`, `offset` |
 | `GET /api/v1/events` | SSE 事件流 | 无 |
 
+图片响应会携带 `X-Wechat-Media-Quality: full|thumbnail`。服务会优先返回本机已有的高清/原图文件；若微信只下载过缩略图，则返回 `thumbnail`，调用方不应长期缓存，并可在微信下载原图后重试。
+
 **认证：** 带 `--token` 启动时须携带 `Authorization: Bearer <token>`。`--host` 不是本机地址时 `--token` 必填。
 
 当前 HTTP API 为**只读**，没有 send/reply/webhook 等写接口。
@@ -312,14 +314,15 @@ wx-cli sessions                         # 4. 重试查询
 
 | 命令 | item 关键字段 |
 |------|-------------|
-| sessions | `username`, `display_name`, `summary`, `sort_timestamp`, `direction?` |
+| sessions | `username`, `display_name`, `avatar_url?`, `summary`, `sort_timestamp`, `direction?` |
 | query | `sort_seq`, `server_id`, `msg_type`, `sender`, `content`, `direction` |
 | timeline API | `sort_seq`, `server_id`, `msg_type`, `sender`, `talker`, `talker_display_name`, `create_time`, `direction`, `snippet`；统一按时间跨会话排序 |
-| contacts | `user_name`, `alias`, `remark`, `nick_name`, `phone`, `labels` |
+| contacts | `user_name`, `alias`, `remark`, `nick_name`, `avatar_url?`, `phone`, `labels` |
 | search | `server_id`, `talker`, `sender`, `snippet`, `hit_type` |
 
 **易混淆字段：**
 - contacts 用 `user_name`（下划线），sessions 用 `username`（无下划线）
+- `avatar_url` 优先取微信小头像地址，缺失时回退大头像地址；本地没有记录时不输出
 - message 的 `sender` 才是消息级 self/other 判断依据
 - `/api/v1/health` 的 `current_account.wxid` 是判断"我发的"的主事实源
 

@@ -43,16 +43,19 @@ impl WechatDb {
         limit: usize,
         label_map: &HashMap<String, String>,
     ) -> Result<QueryResult<Contact>, DbError> {
+        let avatar_expr = self.contact_avatar_select_expr()?;
         let total_rows: usize =
             self.contact_conn
                 .query_row("SELECT COUNT(*) FROM contact", [], |row| {
                     row.get::<_, i64>(0)
                 })? as usize;
 
-        let mut stmt = self.contact_conn.prepare(
-            "SELECT username, alias, remark, nick_name, description, extra_buffer \
-             FROM contact ORDER BY username ASC LIMIT ?1 OFFSET ?2",
-        )?;
+        let sql = format!(
+            "SELECT username, alias, remark, nick_name, description, extra_buffer, \
+             {avatar_expr} AS avatar_url \
+             FROM contact ORDER BY username ASC LIMIT ?1 OFFSET ?2"
+        );
+        let mut stmt = self.contact_conn.prepare(&sql)?;
         let rows = stmt.query_map(
             [
                 Value::Integer(limit as i64),
@@ -81,6 +84,7 @@ impl WechatDb {
         label_map: &HashMap<String, String>,
     ) -> Result<QueryResult<Contact>, DbError> {
         let kw_lower = query.keyword.as_ref().unwrap().to_lowercase();
+        let avatar_expr = self.contact_avatar_select_expr()?;
 
         let total_rows: usize =
             self.contact_conn
@@ -88,10 +92,12 @@ impl WechatDb {
                     row.get::<_, i64>(0)
                 })? as usize;
 
-        let mut stmt = self.contact_conn.prepare(
-            "SELECT username, alias, remark, nick_name, description, extra_buffer \
-             FROM contact ORDER BY username ASC",
-        )?;
+        let sql = format!(
+            "SELECT username, alias, remark, nick_name, description, extra_buffer, \
+             {avatar_expr} AS avatar_url \
+             FROM contact ORDER BY username ASC"
+        );
+        let mut stmt = self.contact_conn.prepare(&sql)?;
         let rows = stmt.query_map([], |row| self.map_contact_row(row, label_map))?;
 
         let all_contacts: Vec<Contact> = rows.filter_map(|r| r.ok()).collect();
@@ -126,6 +132,10 @@ impl WechatDb {
         let nick_name: String = row.get::<_, String>(3).unwrap_or_default();
         let memo: Option<String> = row.get::<_, Option<String>>(4).unwrap_or(None);
         let extra_buffer: Vec<u8> = row.get::<_, Vec<u8>>(5).unwrap_or_default();
+        let avatar_url: Option<String> = row
+            .get::<_, Option<String>>(6)
+            .unwrap_or(None)
+            .filter(|value| !value.is_empty());
 
         let extra = contact_proto::decode_extra_buffer(&extra_buffer);
 
@@ -147,6 +157,22 @@ impl WechatDb {
             source_scene: extra.source_scene,
             phone: extra.phone,
             labels,
+            avatar_url,
+        })
+    }
+
+    /// Build a compatible avatar expression for WeChat database variants.
+    /// Older fixtures and database versions may not contain either column.
+    fn contact_avatar_select_expr(&self) -> Result<&'static str, DbError> {
+        let has_small =
+            decode::check_column_exists(&self.contact_conn, "contact", "small_head_url")?;
+        let has_big = decode::check_column_exists(&self.contact_conn, "contact", "big_head_url")?;
+
+        Ok(match (has_small, has_big) {
+            (true, true) => "COALESCE(NULLIF(small_head_url, ''), NULLIF(big_head_url, ''))",
+            (true, false) => "NULLIF(small_head_url, '')",
+            (false, true) => "NULLIF(big_head_url, '')",
+            (false, false) => "NULL",
         })
     }
 

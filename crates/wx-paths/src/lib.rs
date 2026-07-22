@@ -369,21 +369,21 @@ mod tests {
     #[test]
     fn server_lock_file_under_server_state() {
         let ap = AppPaths::new().unwrap();
-        assert!(ap.server_lock_file().starts_with(&ap.server_state_dir()));
+        assert!(ap.server_lock_file().starts_with(ap.server_state_dir()));
         assert!(ap.server_lock_file().ends_with("manager.lock"));
     }
 
     #[test]
     fn server_config_file_under_server_state() {
         let ap = AppPaths::new().unwrap();
-        assert!(ap.server_config_file().starts_with(&ap.server_state_dir()));
+        assert!(ap.server_config_file().starts_with(ap.server_state_dir()));
         assert!(ap.server_config_file().ends_with("config.json"));
     }
 
     #[test]
     fn server_state_file_under_server_state() {
         let ap = AppPaths::new().unwrap();
-        assert!(ap.server_state_file().starts_with(&ap.server_state_dir()));
+        assert!(ap.server_state_file().starts_with(ap.server_state_dir()));
         assert!(ap.server_state_file().ends_with("state.json"));
     }
 

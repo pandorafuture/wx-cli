@@ -42,6 +42,7 @@ enum MediaPayload {
     InlineBytes {
         bytes: Vec<u8>,
         content_type: &'static str,
+        quality: Option<&'static str>,
     },
     ServePath {
         path: PathBuf,
@@ -56,11 +57,17 @@ impl MediaPayload {
             Self::InlineBytes {
                 bytes,
                 content_type,
+                quality,
             } => {
                 let mut response = bytes.into_response();
                 response
                     .headers_mut()
                     .insert(CONTENT_TYPE, HeaderValue::from_static(content_type));
+                if let Some(quality) = quality {
+                    response
+                        .headers_mut()
+                        .insert("x-wechat-media-quality", HeaderValue::from_static(quality));
+                }
                 Ok(response)
             }
             Self::ServePath {
@@ -242,6 +249,14 @@ fn resolve_image(
     let dat_path = lookup.recommended.ok_or_else(|| {
         ServeError::NotFound(format!("no candidate image file found for md5={md5}"))
     })?;
+    let quality = if dat_path
+        .file_name()
+        .is_some_and(|name| name.to_string_lossy().ends_with("_t.dat"))
+    {
+        "thumbnail"
+    } else {
+        "full"
+    };
     let data = std::fs::read(&dat_path)
         .map_err(|e| ServeError::Internal(format!("failed to read {}: {e}", dat_path.display())))?;
     let decoded = wx_media::decrypt_dat(&data, &dat_decrypt)
@@ -259,12 +274,14 @@ fn resolve_image(
         return Ok(MediaPayload::InlineBytes {
             bytes: transcoded.data,
             content_type: image_content_type(transcoded.ext),
+            quality: Some(quality),
         });
     }
 
     Ok(MediaPayload::InlineBytes {
         bytes: decoded.data,
         content_type: image_content_type(&decoded.ext),
+        quality: Some(quality),
     })
 }
 
@@ -288,6 +305,7 @@ fn resolve_voice(
             return Ok(MediaPayload::InlineBytes {
                 bytes: cached.bytes.clone(),
                 content_type: cached.content_type,
+                quality: None,
             });
         }
     }
@@ -331,6 +349,7 @@ fn resolve_voice(
                 return Ok(MediaPayload::InlineBytes {
                     bytes: result.data,
                     content_type: result.mime,
+                    quality: None,
                 });
             }
             Err(wx_media::MediaError::LookupMiss(_))

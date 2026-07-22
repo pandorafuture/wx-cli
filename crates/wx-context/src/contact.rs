@@ -15,6 +15,7 @@ struct ResolvedContact {
     signature: Option<String>,
     region: Option<String>,
     labels: Vec<String>,
+    avatar_url: Option<String>,
 }
 
 pub struct ContactResolver {
@@ -56,6 +57,7 @@ impl ContactResolver {
                         signature: c.signature,
                         region: c.region,
                         labels: c.labels,
+                        avatar_url: c.avatar_url,
                     },
                 );
             }
@@ -90,6 +92,13 @@ impl ContactResolver {
             .get(wxid)
             .map(|r| r.labels.as_slice())
             .unwrap_or(&[])
+    }
+
+    /// Resolve a wxid to its preferred avatar URL.
+    pub fn avatar_url(&self, wxid: &str) -> Option<&str> {
+        self.contacts
+            .get(wxid)
+            .and_then(|contact| contact.avatar_url.as_deref())
     }
 
     /// Iterate all contacts with their wxid and labels.
@@ -200,6 +209,7 @@ mod tests {
                         signature: None,
                         region: None,
                         labels: Vec::new(),
+                        avatar_url: None,
                     },
                 )
             })
@@ -235,6 +245,7 @@ mod tests {
                         signature: None,
                         region: None,
                         labels: labels.iter().map(|s| s.to_string()).collect(),
+                        avatar_url: None,
                     },
                 )
             })

@@ -15,21 +15,21 @@ fn make_xor_dat(key: u8) -> Vec<u8> {
 /// Header: 07 08 V1 08 07 (6B) + aes_size LE (4B) + xor_size LE (4B) + 0x01 (1B) = 15B
 /// Then AES-ECB encrypted payload with fixed key, then raw, then XOR tail.
 fn make_v1_dat() -> Vec<u8> {
-    use aes::cipher::{BlockCipherEncrypt, KeyInit};
+    use aes::cipher::{Array, BlockCipherEncrypt, KeyInit};
     use aes::Aes128;
 
     let key = b"cfcd208495d565ef"; // md5("0")[:16]
     let cipher = Aes128::new(key.into());
 
     // Plaintext: JPEG header (16 bytes = 1 AES block) with PKCS7 padding
-    let mut block1 = [
+    let mut block1 = Array::from([
         0xFFu8, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00,
         0x01,
-    ];
-    let mut block2 = [16u8; 16]; // full PKCS7 padding block
+    ]);
+    let mut block2 = Array::from([16u8; 16]); // full PKCS7 padding block
 
-    cipher.encrypt_block(aes::cipher::Array::from_mut_slice(&mut block1));
-    cipher.encrypt_block(aes::cipher::Array::from_mut_slice(&mut block2));
+    cipher.encrypt_block(&mut block1);
+    cipher.encrypt_block(&mut block2);
 
     let aes_size: u32 = 16; // original plaintext size
     let xor_size: u32 = 0;
@@ -46,20 +46,20 @@ fn make_v1_dat() -> Vec<u8> {
 
 /// Build a V2-encrypted `.dat` file with known AES key and XOR tail.
 fn make_v2_dat(aes_key: &[u8; 16], xor_key: u8) -> Vec<u8> {
-    use aes::cipher::{BlockCipherEncrypt, KeyInit};
+    use aes::cipher::{Array, BlockCipherEncrypt, KeyInit};
     use aes::Aes128;
 
     let cipher = Aes128::new(aes_key.into());
 
     // Plaintext: PNG header (16 bytes = 1 block)
-    let mut block1 = [
+    let mut block1 = Array::from([
         0x89u8, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44,
         0x52,
-    ];
-    let mut block2 = [16u8; 16]; // PKCS7 padding block
+    ]);
+    let mut block2 = Array::from([16u8; 16]); // PKCS7 padding block
 
-    cipher.encrypt_block(aes::cipher::Array::from_mut_slice(&mut block1));
-    cipher.encrypt_block(aes::cipher::Array::from_mut_slice(&mut block2));
+    cipher.encrypt_block(&mut block1);
+    cipher.encrypt_block(&mut block2);
 
     let aes_size: u32 = 16;
     // Tail: 4 bytes XOR-encrypted

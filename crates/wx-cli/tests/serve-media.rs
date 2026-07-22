@@ -4,6 +4,7 @@ use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
+use std::sync::Mutex;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -18,6 +19,7 @@ const MSG_TABLE: &str = "Msg_29a6db07e8bbdb53f5d54cc3c309f3f1";
 const GROUP_TALKER: &str = "test@chatroom";
 const GROUP_MSG_TABLE: &str = "Msg_1d282e28b02b5c9f9522f855de32f9a8";
 const HIDDEN_SENDER: &str = "wxid_spam";
+static SERVER_START_LOCK: Mutex<()> = Mutex::new(());
 
 fn bin() -> &'static str {
     env!("CARGO_BIN_EXE_wx-cli")
@@ -150,7 +152,20 @@ fn serve_media_dispatch_image_returns_png_bytes() {
     );
     assert_eq!(response.status_code, 200, "{response:#?}");
     assert_eq!(response.header("content-type"), Some("image/png"));
+    assert_eq!(response.header("x-wechat-media-quality"), Some("full"));
     assert_eq!(&response.body[..8], b"\x89PNG\r\n\x1a\n");
+}
+
+#[test]
+fn serve_media_thumbnail_only_image_reports_quality() {
+    let server = spawn_test_server();
+    let response = http_get(
+        &server.base_url,
+        "/api/v1/media?server_id=3009&talker=wxid_alice",
+    );
+    assert_eq!(response.status_code, 200, "{response:#?}");
+    assert_eq!(response.header("content-type"), Some("image/png"));
+    assert_eq!(response.header("x-wechat-media-quality"), Some("thumbnail"));
 }
 
 #[test]
@@ -326,6 +341,10 @@ fn spawn_test_server_with_setup(envs: &[(&str, &str)], hidden_contacts: &[&str])
     }
     let account_dir = fixture.path().join(TEST_ACCOUNT_ID);
     let runtime_root = fixture.path().join("runtime");
+    // Keep ephemeral-port selection and worker binding atomic across parallel tests.
+    let _start_guard = SERVER_START_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let port = find_open_port();
     let mut command = Command::new(bin());
     command
@@ -712,6 +731,27 @@ fn create_encrypted_message_db(path: &Path, raw_key: &[u8; 32]) {
             )
             .expect("insert image ok message");
 
+            let image_thumb_only_info =
+                encode_packed_info_for_test(Some("md5_image_thumb_only"), None);
+            conn.execute(
+                &format!(
+                    "INSERT INTO [{table}] VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                    table = MSG_TABLE
+                ),
+                params![
+                    301_i64,
+                    3009_i64,
+                    3_i64,
+                    1_i64,
+                    1_709_251_200_i64,
+                    Vec::<u8>::new(),
+                    image_thumb_only_info,
+                    0_i32,
+                    None::<i32>,
+                ],
+            )
+            .expect("insert thumbnail-only image message");
+
             let image_wxgf_png_info = encode_packed_info_for_test(Some("md5_image_wxgf_png"), None);
             conn.execute(
                 &format!(
@@ -985,6 +1025,8 @@ fn create_image_fixture(attach_dir: &Path) {
     let encrypted = xor_bytes(&png, xor_key);
     fs::write(month_dir.join("md5_image_ok_t.dat"), &encrypted).expect("write thumb dat");
     fs::write(month_dir.join("md5_image_ok.dat"), &encrypted).expect("write image dat");
+    fs::write(month_dir.join("md5_image_thumb_only_t.dat"), &encrypted)
+        .expect("write thumbnail-only dat");
 
     let wxgf_png = sample_wxgf_with_embedded_png();
     let wxgf_png_encrypted = xor_bytes(&wxgf_png, xor_key);

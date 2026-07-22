@@ -3132,7 +3132,7 @@ checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
 
 [[package]]
 name = "wx-cli"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "axum",
  "chrono",
@@ -3168,7 +3168,7 @@ dependencies = [
 
 [[package]]
 name = "wx-context"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "aes",
  "cbc",
@@ -3192,7 +3192,7 @@ dependencies = [
 
 [[package]]
 name = "wx-db"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "hex",
  "insta",
@@ -3209,7 +3209,7 @@ dependencies = [
 
 [[package]]
 name = "wx-decrypt"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "aes",
  "cbc",
@@ -3222,7 +3222,7 @@ dependencies = [
 
 [[package]]
 name = "wx-keychain"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "aes",
  "cbc",
@@ -3244,7 +3244,7 @@ dependencies = [
 
 [[package]]
 name = "wx-media"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "aes",
  "base64",
@@ -3262,7 +3262,7 @@ dependencies = [
 
 [[package]]
 name = "wx-monitor"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "aes",
  "cbc",
@@ -3283,7 +3283,7 @@ dependencies = [
 
 [[package]]
 name = "wx-paths"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "dirs",
  "libc",

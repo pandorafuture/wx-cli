@@ -3,7 +3,7 @@ members = ["crates/wx-decrypt", "crates/wx-keychain", "crates/wx-cli", "crates/w
 resolver = "2"
 
 [workspace.package]
-version = "0.7.3"
+version = "0.7.4"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/pandorafuture/wx-cli"

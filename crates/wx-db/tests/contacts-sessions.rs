@@ -282,6 +282,55 @@ fn contacts_sessions_query_contacts_limit() {
     assert_eq!(result.items.len(), 1);
 }
 
+#[test]
+fn contacts_sessions_query_contacts_avatar_url() {
+    let dir = create_fixture();
+    let contact_path = dir.path().join("contact").join("contact.db");
+    let conn = Connection::open(contact_path).unwrap();
+    conn.execute_batch(
+        "ALTER TABLE contact ADD COLUMN small_head_url TEXT;
+         ALTER TABLE contact ADD COLUMN big_head_url TEXT;",
+    )
+    .unwrap();
+    conn.execute(
+        "UPDATE contact SET small_head_url = ?1, big_head_url = ?2 WHERE username = ?3",
+        params![
+            "https://avatar.example/alice-small.jpg",
+            "https://avatar.example/alice-big.jpg",
+            "wxid_alice"
+        ],
+    )
+    .unwrap();
+    conn.execute(
+        "UPDATE contact SET big_head_url = ?1 WHERE username = ?2",
+        params!["https://avatar.example/bob-big.jpg", "wxid_bob"],
+    )
+    .unwrap();
+    drop(conn);
+
+    let db = WechatDb::open(dir.path()).unwrap();
+    let result = db.query_contacts(&ContactQuery::new()).unwrap();
+    let alice = result
+        .items
+        .iter()
+        .find(|contact| contact.user_name == "wxid_alice")
+        .unwrap();
+    let bob = result
+        .items
+        .iter()
+        .find(|contact| contact.user_name == "wxid_bob")
+        .unwrap();
+
+    assert_eq!(
+        alice.avatar_url.as_deref(),
+        Some("https://avatar.example/alice-small.jpg")
+    );
+    assert_eq!(
+        bob.avatar_url.as_deref(),
+        Some("https://avatar.example/bob-big.jpg")
+    );
+}
+
 // ---- sessions tests ----
 
 #[test]

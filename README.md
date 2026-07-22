@@ -175,6 +175,10 @@ wx-cli server restart                          # 重启
 
 REST 端点：`/api/v1/health`、`/api/v1/sessions`、`/api/v1/contacts`、`/api/v1/messages`、`/api/v1/timeline`、`/api/v1/search`、`/api/v1/media`、`/api/v1/events`（SSE）。
 
+`/api/v1/media` 的图片响应会通过 `X-Wechat-Media-Quality: full|thumbnail` 标明本机返回的是完整图还是缩略图；服务始终优先选择本机已经下载的高清/原图。
+
+会话与联系人 JSON 在本地数据库有记录时会返回可选的 `avatar_url`，可用于展示个人或群聊头像；没有头像字段的旧数据库会省略该值。
+
 其中 `/api/v1/timeline?since=<unix>&until=<unix>` 可在一次请求中读取时间范围内所有会话的消息，适合 Agent 记忆补全、归档和批处理，避免逐会话反复调用。
 
 所有查询命令加 `--format json` 可获取 JSON 格式输出。

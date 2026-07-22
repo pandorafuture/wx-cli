@@ -17,6 +17,8 @@ pub struct EnrichedSession {
     pub session: Session,
     pub display_name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub avatar_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub direction: Option<Direction>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub detected_at: Option<i64>,
@@ -61,10 +63,12 @@ pub fn enrich_session(
     detected_at: Option<i64>,
 ) -> EnrichedSession {
     let display_name = resolver.display_with_id(&session.username);
+    let avatar_url = resolver.avatar_url(&session.username).map(str::to_string);
     let direction = derive_session_direction(session.last_msg_sender.as_deref(), self_wxid);
     EnrichedSession {
         session,
         display_name,
+        avatar_url,
         direction,
         detected_at,
     }
@@ -76,6 +80,7 @@ pub fn enrich_session_event(
     resolver: &ContactResolver,
 ) -> EnrichedSession {
     let display_name = resolver.display_with_id(&ev.username);
+    let avatar_url = resolver.avatar_url(&ev.username).map(str::to_string);
     let direction = derive_session_direction(ev.last_msg_sender.as_deref(), self_wxid);
     let session = Session {
         username: ev.username,
@@ -88,6 +93,7 @@ pub fn enrich_session_event(
     EnrichedSession {
         session,
         display_name,
+        avatar_url,
         direction,
         detected_at: Some(ev.detected_at),
     }
@@ -743,6 +749,7 @@ mod tests {
                 last_sender_display_name: None,
             },
             display_name: "Spam".to_string(),
+            avatar_url: None,
             direction: Some(Direction::Incoming),
             detected_at: None,
         };
@@ -764,6 +771,7 @@ mod tests {
                 last_sender_display_name: Some("Spammer".to_string()),
             },
             display_name: "Group".to_string(),
+            avatar_url: None,
             direction: Some(Direction::Incoming),
             detected_at: None,
         };
@@ -787,6 +795,7 @@ mod tests {
                 last_sender_display_name: Some("Normal".to_string()),
             },
             display_name: "Group".to_string(),
+            avatar_url: None,
             direction: Some(Direction::Incoming),
             detected_at: None,
         };

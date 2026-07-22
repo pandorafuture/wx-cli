@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+## [0.7.4] - 2026-07-22
+
+### Features
+
+- **Contact and conversation avatars** — Expose an optional `avatar_url` in contact and enriched session JSON, preferring the small avatar and falling back to the large avatar while remaining compatible with older database schemas
+- **Image quality metadata** — Mark `/api/v1/media` image responses as `full` or `thumbnail`, while continuing to prefer locally available high-resolution/original image files
+
+### Maintenance
+
+- Keep formatting and Clippy clean on the current stable Rust toolchain, and serialize integration-test server startup to avoid ephemeral-port races
+
 ## [0.7.3] - 2026-07-10
 
 ### Features
