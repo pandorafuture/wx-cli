@@ -21,7 +21,7 @@ tempfile = "3"
 filetime = "0.2"
 aes = "0.9"
 cbc = "0.2"
-hmac = "0.12"
+hmac = "0.13"
 sha2 = "0.10"
 pbkdf2 = { version = "0.12", features = ["hmac"] }
 hex = "0.4"
