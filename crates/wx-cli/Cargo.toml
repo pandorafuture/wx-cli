@@ -45,4 +45,4 @@ tempfile = "3"
 silk-rs = "0.2"
 
 [build-dependencies]
-vergen-gitcl = { version = "9", features = ["build"] }
+vergen-gitcl = { version = "10", features = ["build"] }
