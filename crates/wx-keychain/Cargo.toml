@@ -23,6 +23,6 @@ libc = "0.2"
 [dev-dependencies]
 aes = "0.9"
 cbc = "0.2"
-hmac = "0.12"
+hmac = "0.13"
 sha2 = "0.10"
 tempfile = "3"
